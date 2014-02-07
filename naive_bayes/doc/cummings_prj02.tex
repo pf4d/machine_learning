@@ -14,7 +14,7 @@ First, Bays theorem states that
 
 $$ P(v_j | a_1, a_2, \ldots, a_n) = \frac{P(a_1, a_2, \ldots, a_n | v_j) P(v_j)}{P(a_1,a_2,\ldots,a_n)},$$
 
-where $j$ is the number of different values and $n$ is the number of attributes.  If we assume condtional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
+where $a$ is the attribute, $v$ is a value, $j$ is the number of different values and $n$ is the number of attributes.  If we assume condtional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
 
 \begin{align}
   v_{NB} = \argmax_{v_j \in V}\left\{ P(v_j) \prod_i P(a_i | v_j) \right\},

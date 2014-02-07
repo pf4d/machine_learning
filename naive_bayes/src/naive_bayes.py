@@ -62,14 +62,18 @@ nl = len(lemon)
 lens = [na, np, no, nl]
 
 def plot_dist(train, train_class, norm=True):
-  #fig  = figure(figsize=(18,12))
-  fig  = figure()
-  mus  = zeros((4,4))
-  sigs = zeros((4,4))
+  fig   = figure(figsize=(10,8))
+  #fig  = figure()
+  mus   = zeros((4,4))
+  sigs  = zeros((4,4))
+  bi_a  = []
+  ct_a  = []
   for i in range(4):
     ax    = fig.add_subplot(220 + i+1)
     mini  = train[:,i].min()
     maxi  = train[:,i].max()
+    bi_i  = []
+    ct_i  = []
     for j in range(4):
       wj   = where(train_class == j+1)[0]
       xj   = train[wj,i]
@@ -82,6 +86,10 @@ def plot_dist(train, train_class, norm=True):
       ax.plot(rngi, get_normal(rngi, muj, sigj), linewidth=2, label=lbln)
       mus[j,i]  = muj
       sigs[j,i] = sigj
+      bi_i.append(bins)
+      ct_i.append(ct)
+    bi_a.append(array(bi_i))
+    ct_a.append(array(ct_i))
   
     ax.set_title(attrib[i])
     if i == 2:
@@ -89,10 +97,10 @@ def plot_dist(train, train_class, norm=True):
       leg.get_frame().set_alpha(0.5)
     ax.grid()
   show()
-  return mus, sigs
+  return mus, sigs, array(bi_a), array(ct_a)
 
 ion()
-mus, sigs = plot_dist(train, train_class, norm=True)
+mus, sigs, bins, cts = plot_dist(train, train_class, norm=True)
 
 i = 1
 for mu, sig in zip(mus, sigs):
@@ -101,117 +109,29 @@ for mu, sig in zip(mus, sigs):
   n      = len(mu)
   b_samp = mu*ones((nsamp,n)) + sig*randn(nsamp,n)
   if i == 1:
-    train_new       = b_samp
-    train_class_new = i*ones(nsamp)
+    train_n       = b_samp
+    train_class_n = i*ones(nsamp)
   else:
-    train_new = vstack((train_new, b_samp))
-    train_class_new = append(train_class_new, i*ones(nsamp))
+    train_n       = vstack((train_n, b_samp))
+    train_class_n = append(train_class_n, i*ones(nsamp))
   i += 1
 
-mus_new, sigs_new = plot_dist(train_new, train_class_new, norm=True)
+mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, norm=True)
 
 
-##===============================================================================
-## find the nearest neighbors :
-#def calc_dist(si, sj):
-#  dist = sqrt(sum((si - sj)**2))
-#  return dist
-#
-## calculate the distance from each test case to each training case :
-#dist = []
-#for i, si in enumerate(test):
-#  dist_i = []
-#  stack  = vstack((si, train))   # stack test_i with the training set
-#  tr_min = stack.min(axis=0)     # find min
-#  tr_max = stack.max(axis=0)     # find max
-#  for j, sj in enumerate(train):
-#    si_norm = (si - tr_min) / (tr_max - tr_min) # normalize the fields
-#    sj_norm = (sj - tr_min) / (tr_max - tr_min) # normalize the fields
-#    dist_i.append(calc_dist(si_norm, sj_norm))
-#  dist.append(array(dist_i))
-#dist = array(dist)
-#
-## find the indicies of the sorted distances :
-#ii   = argsort(dist)
-#
-#
-##===============================================================================
-## function for classifying :
-#def classify(k):
-#  #k  = int(sys.argv[1])
-#  knn   = ii[:,:k]              # knn for each test fruit
-#  res_i = []                    # array of votes
-#  # add the weighted vote to an array of neighbor classes :
-#  for i,j in enumerate(knn):
-#    res_j = zeros(4)
-#    tc    = train_class[j]      # class of neighbor j
-#    dc    = dist[i][j]          # distance from test fruit i to neighbor j
-#    # for each neighbor, add the weighted vote to an array of votes :
-#    for c,d in zip(tc,dc):
-#      i = classes[c]            # class index of neighbor
-#      if weigh :
-#        res_j[i] += 1/d**2      # add the inverse of square distance
-#      else :
-#        res_j[i] += 1           # add the non-weighted vote 
-#    res_i.append(res_j)         # add the vote for test fruit i to the array
-#  res_i = array(res_i)
-#  
-#  # calculate the guess class for all test classes simultaneously :
-#  guess_class = argmax(res_i, axis=1)
-#  return guess_class
-#
-#
-##===============================================================================
-## guess the class of the new fruit based on k nearest neighbors :
-## for 0 < k <= m
-#n = len(train_class)            # size of training set
-#m = len(test_class)             # size of test set
-#percent_correct = []            # percent correct for each k
-#compute_time    = []            # time to compute for each k
-#k = int(sys.argv[2])            # input k
-#if k == 0: rng = range(1,n+1)   # if k == 0, compute for all k
-#else :     rng = [k]            # else just do it once.
-#for i in rng:
-#  t0          = time()          # beginning time
-#  guess_class = classify(i)     # classify with k
-#  tf          = time()          # end time
-#  
-#  # calculate and display the percent correct and time to calculate :
-#  correct = 0.0
-#  for tc,gc in zip(test_class, guess_class):
-#    if tc == inv_classes[gc]: correct += 1
-#  per_cor = 100 * correct / m
-#  t_tot   = tf - t0 
-#  percent_correct.append(per_cor)
-#  compute_time.append(t_tot)
-#  print "Percent correct for k=%i : %.1f%% >>> Time to compute : %.3e seconds" \
-#        % (i, per_cor, t_tot)
-#
-#
-##===============================================================================
-## plot the results if all k are computed :
-#if k == 0:
-#  if weigh: tit = 'fruit classification weighted by distance'
-#  else:     tit = 'fruit classification without weighting'
-#  pur = '#6e009d'
-#  fig = figure()
-#  ax1 = fig.add_subplot(111)
-#  ax2 = ax1.twinx()
-#  for tl in ax1.get_yticklabels():
-#    tl.set_color('k')
-#  for tl in ax2.get_yticklabels():
-#    tl.set_color(pur)
-#  
-#  ax1.plot(range(1,n+1), percent_correct, color='k', 
-#           drawstyle='steps-mid', lw=2.0) 
-#  ax2.plot(range(1,n+1), compute_time,    color=pur, 
-#           drawstyle='steps-mid', lw=2.0) 
-#  ax1.set_xlabel(r'k')
-#  ax1.set_ylabel(r'% correct',        color='k')
-#  ax2.set_ylabel(r'compute time [s]', color=pur)
-#  ax1.set_title(tit)
-#  ax1.grid()
-#  show()
+#===============================================================================
+def find_bin(bins, v):
+  idx = argmin(abs(bins - v))
+  if bins[idx] < v: cti = idx
+  else:             cti = idx - 1
+  return cti
+
+#for vi in test:
+
+
+
+
+
 
 
 
