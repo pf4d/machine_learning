@@ -1,0 +1,38 @@
+\input{functions.tex}
+
+\begin{document}
+\small
+
+\title{Project 01}
+\author{Evan Cummings\\
+CSCI 544 - Machine Learning}
+
+\maketitle
+
+Here is the output of my classifier for all $0 < k \leq n$:
+
+\begin{multicols}{2}
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=0.45\textwidth]{images/weights.png}
+\end{figure}
+\vspace{5mm}
+
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=0.45\textwidth]{images/no_weights.png}
+\end{figure}
+\vspace{5mm}
+\end{multicols}
+
+Note that vote-weighting requires approximately twice the time to compute than without weighting. Here is the screenshot from a sucessful Weka run on the same data:
+
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=0.75\textwidth]{images/weka.png}
+\end{figure}
+\vspace{5mm}
+
+\end{document}
+
+

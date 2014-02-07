@@ -1,0 +1,56 @@
+knn.py
+Evan Cummings
+CSCI 544 - Machine Learning
+Spring 2014 - Doug Raiford
+
+Analysis :
+----------
+
+This script uses the knn method to classify a set of fruit data.  The
+accuracy is reported along with the time to compute.
+
+The distances to each of the training data from each of the testing data are
+stored in a m x n matrix where m is the number of test data and n is the 
+number of training data.  This matrix is then sorted and utilized for all 
+following calculations.
+
+Methods were created to classify and compute the distances for a piece of test 
+data for conveinence, and instead of creating a normalize function, I simply 
+stacked the piece of test data to the training set and found the min and max 
+for the combined set.
+
+
+Usage :
+-------
+
+The first argument should be either 0 or 1 and determines whether weighted
+voting should be used.  The second argument determines k.  If this value is 
+0, a loop will run and calculate for all 0 < k <= n, where n is the number of
+training data.
+
+The bottom 'plot' section of the code plots the compute time and percentage 
+correct for each k.  To do this, k must be set to zero via the second arg.
+
+  "python knn.py 1 0", or
+  "python knn.py 0 0" for non-weighted voting.
+
+A plot of all 0 < k <= n is created along with compute time.
+
+
+Requirements :
+--------------
+
+  PyLab must be installed : http://wiki.scipy.org/PyLab
+
+Results :
+---------
+
+  Percent correct for k=1    : 93.0% >>> Time to compute : 1.122e-03 seconds
+  Percent correct for k=5    : 97.0% >>> Time to compute : 1.806e-03 seconds
+  Percent correct for k=10   : 97.0% >>> Time to compute : 2.603e-03 seconds
+  Percent correct for k=20   : 98.0% >>> Time to compute : 4.210e-03 seconds
+  Percent correct for k=100  : 98.0% >>> Time to compute : 1.702e-02 seconds
+  Percent correct for k=1000 : 97.0% >>> Time to compute : 2.984e-01 seconds 
+
+
+
