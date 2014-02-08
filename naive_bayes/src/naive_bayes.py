@@ -43,11 +43,13 @@ test    = loadtxt(test_f,  delimiter=",", usecols=(0,1,2,3), skiprows=1)
 
 # test classes :
 test_f.seek(0)
-test_class  = loadtxt(test_f, delimiter=",", usecols=(4,), skiprows=1)
+test_class  = loadtxt(test_f, dtype='int', delimiter=",", 
+                      usecols=(4,), skiprows=1)
 
 # train classes :
 train_f.seek(0)
-train_class = loadtxt(train_f, delimiter=",", usecols=(4,), skiprows=1)
+train_class = loadtxt(train_f, dtype='int', delimiter=",", 
+                      usecols=(4,), skiprows=1)
 
 apple  = where(train_class == 1)[0]
 peach  = where(train_class == 2)[0]
@@ -100,7 +102,7 @@ def plot_dist(train, train_class, norm=True):
   return mus, sigs, array(bi_a), array(ct_a)
 
 ion()
-mus, sigs, bins, cts = plot_dist(train, train_class, norm=True)
+mus, sigs, bins, cts = plot_dist(train, train_class, norm=False)
 
 i = 1
 for mu, sig in zip(mus, sigs):
@@ -120,15 +122,36 @@ mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, norm=True)
 
 
 #===============================================================================
-def find_bin(bins, v):
+def find_ct_index(bins, v):
   idx = argmin(abs(bins - v))
   if bins[idx] < v: cti = idx
   else:             cti = idx - 1
   return cti
 
-#for vi in test:
+P_test = []
+v_NB_a = []
+for k,va in enumerate(test):
+  P_mat = zeros((4,4))
+  for i,v in enumerate(va):
+    for j in range(4):
+      if v > bins[i,j].max() or v < bins[i,j].min():
+        P_mat[i,j] = 0.0
+      else:
+        k          = find_ct_index(bins[i,j], v)
+        P_ij       = cts[i,j,k]
+        P_mat[i,j] = P_ij
+  sum_i   = sum(P_mat,  axis=0)
+  P_mat  /= sum_i
+  prod_j  = prod(P_mat, axis=1)
+  v_NB    = argmax(prod_j) + 1
+  v_NB_a.append(v_NB)
+  P_test.append(P_mat)
+v_NB_a = array(v_NB_a)
+P_test = array(P_test)
 
-
+num_corr = sum(test_class - v_NB_a == 0)
+n        = float(len(test_class))
+print "Percent correct: %.1f%%" % (100 * num_corr / n)
 
 
 
