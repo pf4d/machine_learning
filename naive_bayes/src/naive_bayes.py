@@ -63,7 +63,7 @@ nl = len(lemon)
 
 lens = [na, np, no, nl]
 
-def plot_dist(train, train_class, norm=True):
+def plot_dist(train, train_class, nbins, norm=True):
   fig   = figure(figsize=(10,8))
   #fig  = figure()
   mus   = zeros((4,4))
@@ -84,7 +84,8 @@ def plot_dist(train, train_class, norm=True):
       rngi = linspace(mini, maxi, 1000)
       lblh = classes[j+1] + ' (%i)' % (j+1)
       lbln = r'$\mathcal{N}(\mu_%i, \sigma_%i^2)$' % (j+1, j+1)
-      ct, bins, ign = ax.hist(train[wj, i], label=lblh, alpha=0.7, normed=norm)
+      ct, bins, ign = ax.hist(train[wj, i], label=lblh, alpha=0.7, 
+                              normed=norm)
       ax.plot(rngi, get_normal(rngi, muj, sigj), linewidth=2, label=lbln)
       mus[j,i]  = muj
       sigs[j,i] = sigj
@@ -101,8 +102,7 @@ def plot_dist(train, train_class, norm=True):
   show()
   return mus, sigs, array(bi_a), array(ct_a)
 
-ion()
-mus, sigs, bins, cts = plot_dist(train, train_class, norm=False)
+mus, sigs, bins, cts = plot_dist(train, train_class, 10, norm=False)
 
 i = 1
 for mu, sig in zip(mus, sigs):
@@ -118,7 +118,7 @@ for mu, sig in zip(mus, sigs):
     train_class_n = append(train_class_n, i*ones(nsamp))
   i += 1
 
-mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, norm=True)
+mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10, norm=True)
 
 
 #===============================================================================
@@ -128,33 +128,51 @@ def find_ct_index(bins, v):
   else:             cti = idx - 1
   return cti
 
-P_test = []
-v_NB_a = []
-for k,va in enumerate(test):
-  P_mat = zeros((4,4))
-  for i,v in enumerate(va):
-    for j in range(4):
-      if v > bins[i,j].max() or v < bins[i,j].min():
-        P_mat[i,j] = 0.0
-      else:
-        k          = find_ct_index(bins[i,j], v)
-        P_ij       = cts[i,j,k]
-        P_mat[i,j] = P_ij
-  sum_i   = sum(P_mat,  axis=0)
-  P_mat  /= sum_i
-  prod_j  = prod(P_mat, axis=1)
-  v_NB    = argmax(prod_j) + 1
-  v_NB_a.append(v_NB)
-  P_test.append(P_mat)
-v_NB_a = array(v_NB_a)
-P_test = array(P_test)
+def classify_NB(test, test_class, bins, cts):
+  P_test = []
+  v_NB_a = []
+  for va in test:
+    P_mat = zeros((4,4))
+    for i,v in enumerate(va):
+      for j in range(4):
+        if v > bins[i,j].max() or v < bins[i,j].min():
+          P_mat[j,i] = 0.0
+        else:
+          k          = find_ct_index(bins[i,j], v)
+          P_ij       = cts[i,j,k]
+          P_mat[j,i] = P_ij
+    sum_i   = sum(P_mat,  axis=0)
+    P_mat  /= sum_i
+    prod_j  = prod(P_mat, axis=1)
+    v_NB    = argmax(prod_j) + 1
+    v_NB_a.append(v_NB)
+    P_test.append(P_mat)
+  v_NB_a = array(v_NB_a)
+  P_test = array(P_test)
 
-num_corr = sum(test_class - v_NB_a == 0)
-n        = float(len(test_class))
-print "Percent correct: %.1f%%" % (100 * num_corr / n)
+  num_corr = sum(test_class - v_NB_a == 0)
+  n        = float(len(test_class))
+  print "Percent correct: %.1f%%" % (100 * num_corr / n)
+  return v_NB_a
 
+v_NB   = classify_NB(test, test_class, bins,   cts)
+v_NB_n = classify_NB(test, test_class, bins_n, cts_n)
 
+def plot_results(test_class, v_NB):
+  fig = figure(figsize=(12,4))
+  plot(abs(test_class - v_NB), drawstyle='steps-mid', lw=2.0)
+  for x,c in zip(range(len(test_class)), test_class):
+    if c == 4: 
+      text(x, 0.0, c, horizontalalignment='center',
+                      verticalalignment='center')
+  tight_layout()
+  title(r'$|v - v_{NB}|$')
+  xlabel(r'$n$')
+  ylim([-1, 2])
+  grid()
+  show()
 
-
+plot_results(test_class, v_NB)
+plot_results(test_class, v_NB_n)
 
 
