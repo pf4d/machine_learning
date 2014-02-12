@@ -1,6 +1,8 @@
 \input{functions.tex}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
+\usepackage[top=.5in, bottom=.5in, left=.5in, right=.5in]{geometry}
+
 \begin{document}
 \small
 
@@ -14,68 +16,76 @@ First, Bays theorem states that
 
 $$ P(v_j | a_1, a_2, \ldots, a_n) = \frac{P(a_1, a_2, \ldots, a_n | v_j) P(v_j)}{P(a_1,a_2,\ldots,a_n)},$$
 
-where $a$ is the attribute, $v$ is a value, $j$ is the number of different values and $n$ is the number of attributes.  If we assume condtional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
+where $a$ is the attribute, $v$ is a value, $j$ is the number of different values and $n$ is the number of attributes.  If we assume conditional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
 
 \begin{align}
   v_{NB} = \argmax_{v_j \in V}\left\{ P(v_j) \prod_i P(a_i | v_j) \right\},
 \end{align}
 
-where $v_{NB}$ denotes the target value output by the naive Bayes classifier.  The probability of picking value $j$ from the total pool of $m$ observations is given by
+where $v_{NB}$ denotes the target value output by the naive Bayes classifier.  The probability of picking value $j$ from the total pool of $m$ observations is given by $P(v_j) = \frac{\#(v_j)}{m},$ where $\#(v_j)$ is the number of elements with value $v_j$.
 
-$$ P(v_j) = \frac{\#(v_j)}{m},$$
+If we have a set of $m$ observations for each of the attributes $a_i$, $i = 1,2,\ldots,n$, we might try to find an appropriate distribution and model the probabilities from this distribution.  In doing this, we could calculate the $P(a_i | v_j)$ values by simply calculating the specific value on the distribution curve where this value occurs.  For example, if the data are distributed normally, we would plug this value $v$ into the function
 
-where $\#(v_j)$ is the number of elements with value $j$.  This value effectively provides a weighting to equation (1) by accounting for the percentage of 
+$$f(v,\mu, \sigma) = \frac{1}{\sigma \sqrt{2\pi}} \exp\left( -\frac{(v-\mu)^2}{2\sigma^2} \right),$$
+
+where $\mu$ is the mean of the data and $\sigma$ is the standard deviation.  However, if we simplify further and simply use the binned data, we can eliminate any distribution requirements and simply use the data itself to classify new values.  Using this method requires either the same number of observations for each value, or normalization of the bins such that the sum of all the areas of each bin's rectangle is equal to one, i.e., the data are represented by a probability mass function:
+
+\begin{align*}
+  \int_v f(v,\mu,\sigma) dv &= 1, && \text{continuous distribution} \\
+  \sum_n a_n &= 1, && \text{discrete data values}.
+\end{align*}
+
+To better illustrate the problem, I have run Naive Bayes classification on the fruit data set provided for this project along with a newly created data set with an order of magnitude lower number of observations for one fruit.
 
 \newpage
 
 \begin{multicols}{2}
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/not_normed_original.png}
+		\includegraphics[width=0.4\textwidth]{images/not_normed_original.png}
+  \caption{\scriptsize The original data set provided for the project without normalization.  Note that the number of observations for each different fruit are about the same.  The results of Naive Bayes classification are shown below, where the absolute value of the difference between the actual fruit type $v, v_j \in [1,2,3,4]$ is taken from the predicted fruit type.}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/results_original_not_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/results_original_not_normed.png}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/normed_original.png}
+		\includegraphics[width=0.4\textwidth]{images/normed_original.png}
+  \caption{\scriptsize The original data set with normalization performed.  Notice below the results are about the same.}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/results_original_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/results_original_normed.png}
 \end{figure}
-\vspace{5mm}
+
+\end{multicols}
+\begin{multicols}{2}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/not_normed_new.png}
+		\includegraphics[width=0.4\textwidth]{images/not_normed_new.png}
+  \caption{\scriptsize A new data set with the same $\mu$ and $\sigma$ values as the original data, but with 10,000 observations for each fruit except lemons which have 1,000.  Notice that there are a great many 4's (lemons) in the below results which were improperly classified.}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/results_new_not_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/results_new_not_normed.png}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/normed_new.png}
+		\includegraphics[width=0.4\textwidth]{images/normed_new.png}
+  \caption{\scriptsize The same data set as in Figure 3 but with the data normalized.  Note the vastly superior classification of lemons in the below results when compared to Figure 3.}
 \end{figure}
-\vspace{5mm}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.45\textwidth]{images/results_new_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/results_new_normed.png}
 \end{figure}
-\vspace{5mm}
 
 \end{multicols}
 

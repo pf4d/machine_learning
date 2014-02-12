@@ -63,7 +63,7 @@ nl = len(lemon)
 
 lens = [na, np, no, nl]
 
-def plot_dist(train, train_class, nbins, norm=True):
+def plot_dist(train, train_class, nbins, name, norm=True):
   fig   = figure(figsize=(10,8))
   #fig  = figure()
   mus   = zeros((4,4))
@@ -99,10 +99,15 @@ def plot_dist(train, train_class, nbins, norm=True):
       leg = ax.legend()
       leg.get_frame().set_alpha(0.5)
     ax.grid()
+  tight_layout()
+  savefig('../doc/images/' + name, dpi=300)
   show()
   return mus, sigs, array(bi_a), array(ct_a)
 
-mus, sigs, bins, cts = plot_dist(train, train_class, 10, norm=False)
+mus, sigs, bins, cts = plot_dist(train, train_class, 10, 
+                                 'not_normed_original', norm=False)
+mus, sigs, bins, cts = plot_dist(train, train_class, 10,
+                                 'normed_original',     norm=True)
 
 i = 1
 for mu, sig in zip(mus, sigs):
@@ -118,7 +123,10 @@ for mu, sig in zip(mus, sigs):
     train_class_n = append(train_class_n, i*ones(nsamp))
   i += 1
 
-mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10, norm=True)
+mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10,
+                                         'normed_new',     norm=True)
+mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10,
+                                         'not_normed_new', norm=False)
 
 
 #===============================================================================
