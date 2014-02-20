@@ -55,7 +55,22 @@ train_f.seek(0)
 train_class = loadtxt(train_f, dtype='int', delimiter=",", 
                       usecols=(4,), skiprows=1)
 
+apple  = where(train_class == 1)[0]
+peach  = where(train_class == 2)[0]
+orange = where(train_class == 3)[0]
+lemon  = where(train_class == 4)[0]
 
+# total number of observations :
+m  = len(train_class)
+na = len(apple)
+np = len(peach)
+no = len(orange)
+nl = len(lemon)
+
+lens = [na, np, no, nl]
+
+
+#===============================================================================
 def plot_dist(train, train_class, nbins, name, norm=True):
   """
   Function which plots a histogram of data <train> with associated training 
@@ -66,20 +81,23 @@ def plot_dist(train, train_class, nbins, name, norm=True):
   
   Image is saved in directory ../doc/images/.
   """
+  vs    = unique(train_class)              # different values
+  m     = len(vs)                          # number of distinct values
+  n     = shape(train)[1]                  # number of different attributes
   fig   = figure(figsize=(10,8))           # figure instance
   mus   = zeros((4,4))                     # means matrix
   sigs  = zeros((4,4))                     # standard deviations matrix
   bi_a  = []                               # array of bins
   ct_a  = []                               # array of bin counts
   # iterate over each attribute i :
-  for i in range(4):
+  for i in range(n):
     ax    = fig.add_subplot(220 + i+1)     # create a subplot
     mini  = train[:,i].min()               # min of attribute i
     maxi  = train[:,i].max()               # max of attribute i
     bi_i  = []                             # bin array for attribute i
     ct_i  = []                             # bin count array for attribute i
     # iterate over each class j :
-    for j in range(4):
+    for j in range(m):
       wj   = where(train_class == j+1)[0]  # indicies for class j
       xj   = train[wj,i]                   # array of training values j
       muj  = mean(xj)                      # mean of class j
@@ -88,7 +106,7 @@ def plot_dist(train, train_class, nbins, name, norm=True):
       lblh = classes[j+1] + ' (%i)' % (j+1)
       lbln = r'$\mathcal{N}(\mu_%i, \sigma_%i^2)$' % (j+1, j+1)
       # function returns the bin counts and bins
-      ct, bins, ign = ax.hist(train[wj, i], label=lblh, alpha=0.7, 
+      ct, bins, ign = ax.hist(train[wj, i], nbins, label=lblh, alpha=0.7, 
                               normed=norm)
       # plot the results :
       ax.plot(rngi, get_normal(rngi, muj, sigj), linewidth=2, label=lbln)
@@ -105,16 +123,17 @@ def plot_dist(train, train_class, nbins, name, norm=True):
       leg.get_frame().set_alpha(0.5)       # transparent legend
     ax.grid()                              # gridlines
   tight_layout() 
-  savefig('../doc/images/' + name, dpi=300)
+  #savefig('../doc/images/' + name, dpi=300)
   show()
   return mus, sigs, array(bi_a), array(ct_a)
 
 # get the non-normalized data :
-mus, sigs, bins, cts = plot_dist(train, train_class, 10, 
+nbins = 100
+mus, sigs, bins, cts = plot_dist(train, train_class,  nbins, 
                                  'not_normed_original', norm=False)
 # get the normalized data :
-#mus, sigs, bins, cts = plot_dist(train, train_class, 10,
-#                                 'normed_original',     norm=True)
+#mus, sigs, bins, cts = plot_dist(train, train_class, nbins,
+#                                 'normed_original',    norm=True)
 
 # develop a new training data with the same mean and standard deviation
 # as the original but with far fewer lemon (class = 4) observations.
@@ -133,10 +152,10 @@ for mu, sig in zip(mus, sigs):
   i += 1
 
 # get the non-normalized data :
-mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10,
+mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, nbins,
                                          'not_normed_new', norm=False)
 # get the normalized data :
-#mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, 10,
+#mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, nbins,
 #                                         'normed_new',     norm=True)
 
 
@@ -150,32 +169,54 @@ def find_ct_index(bins, v):
   else:             cti = idx - 1
   return cti
 
-def classify_NB(test, test_class, bins, cts):
+def classify_NB(test, test_class, train, train_class, bins, cts, 
+                param=False, mu=None, sig=None):
   """
   Perform Naive Bays classification with test data array <test>, test class 
-  array <test_class>, bins <bins>, and bin counts <cts>.
+  array <test_class>, training data array <train>, training class array 
+  <train_class>, bins <bins>, and bin counts <cts>.  If <param> is True, 
+  use the parametric approach with means and standard deviation matrices 
+  <mu> and <sig>.
   """
-  P_test = []                # Probability array
-  v_NB_a = []                # classified class array
+  P_test = []                     # Probability array
+  v_NB_a = []                     # classified class array
+  q      = len(train_class)       # total number of observations
+  vs     = unique(test_class)     # different possible values
+  m      = len(vs)                # number of different values
+  n      = shape(train)[1]        # number of different attributes
+  
+  # find total number of each values in training set :
+  lens   = []
+  for v in vs:
+    lens.append(sum(train_class == v))
+  lens = array(lens)
+
+  # the probability of getting value j from out training data :
+  Pvj  = lens/float(q)
+  
   # classify each test value va :
   for va in test:
-    P_mat = zeros((4,4))     # probabilities initialized to zero
+    P_mat = zeros((m,n))     # probabilities initialized to zero
     # iterate through each attribute for test value va :
     for i,v in enumerate(va):
       # iterate over each different value :
-      for j in range(4):
-        # if the value is outside of the bin range, probability is zero :
-        if v > bins[i,j].max() or v < bins[i,j].min():
-          P_mat[j,i] = 0.0
-        # otherwise it is the value of the bin count :
+      for j in range(m):
+        if param:
+          P_mat[j,i] = get_normal(v, mus[j,i], sigs[j,i])
         else:
-          k          = find_ct_index(bins[i,j], v)
-          P_ij       = cts[i,j,k]
-          P_mat[j,i] = P_ij
+          # if the value is outside of the bin range, probability is zero :
+          if v > bins[i,j].max() or v < bins[i,j].min():
+            P_mat[j,i] = 1.0
+          # otherwise it is the value of the bin count :
+          else:
+            k          = find_ct_index(bins[i,j], v)
+            P_ij       = cts[i,j,k] + 1.0
+            P_mat[j,i] = P_ij
     sum_i   = sum(P_mat,  axis=0)  # sum over each class probability
-    P_mat  /= sum_i                # normalize the probabilities
-    prod_j  = prod(P_mat, axis=1)  # find the product of probabilities
-    v_NB    = argmax(prod_j) + 1   # find the maximum index of probability
+    P_mat  /= (sum_i + lens)       # normalize the probabilities
+    Pa_vj   = prod(P_mat, axis=1)  # find the product of probabilities
+    prior   = Pvj * Pa_vj          # the prior
+    v_NB    = argmax(prior) + 1    # find the maximum index of probability
     v_NB_a.append(v_NB)            # append the ML class to result list
     P_test.append(P_mat)           # append the probability matrix to list
   v_NB_a = array(v_NB_a)           # convert list to array
@@ -186,8 +227,10 @@ def classify_NB(test, test_class, bins, cts):
   print "Percent correct: %.1f%%" % (100 * num_corr / n)
   return v_NB_a
 
-v_NB   = classify_NB(test, test_class, bins,   cts)    # classify orig. data
-v_NB_n = classify_NB(test, test_class, bins_n, cts_n)  # classify new data
+v_NB   = classify_NB(test, test_class, train, train_class, bins, cts) 
+v_NB_p = classify_NB(test, test_class, train, train_class, bins, cts, 
+                     True, mus, sigs)
+v_NB_n = classify_NB(test, test_class, train, train_class, bins_n, cts_n)
 
 def plot_results(test_class, v_NB):
   """
@@ -208,6 +251,7 @@ def plot_results(test_class, v_NB):
   show()
 
 plot_results(test_class, v_NB)    # plot the results for original data
+plot_results(test_class, v_NB_p)  # plot the results for parametric approach
 plot_results(test_class, v_NB_n)  # plot the results for new data
 
 
