@@ -18,13 +18,6 @@ from pylab import *
 mpl.rcParams['font.family']     = 'serif'
 mpl.rcParams['legend.fontsize'] = 'medium'
 
-def get_normal(x, mu, sigma):
-  """ 
-  Function which returns the normal value at <x> with mean <mu> and 
-  standard deviation <sigma>.
-  """
-  return 1/(sigma * sqrt(2 * pi)) * exp(-(x - mu)**2 / (2* sigma**2))
-
 #===============================================================================
 # collect the data :
 # columns : Redness, Yellowness, Mass, Volume, Class
@@ -67,10 +60,17 @@ np = len(peach)
 no = len(orange)
 nl = len(lemon)
 
-lens = [na, np, no, nl]
-
 
 #===============================================================================
+# functions used to solve :
+
+def get_normal(x, mu, sigma):
+  """ 
+  Function which returns the normal value at <x> with mean <mu> and 
+  standard deviation <sigma>.
+  """
+  return 1/(sigma * sqrt(2 * pi)) * exp(-(x - mu)**2 / (2* sigma**2))
+
 def plot_dist(train, train_class, nbins, name, norm=True):
   """
   Function which plots a histogram of data <train> with associated training 
@@ -123,43 +123,10 @@ def plot_dist(train, train_class, nbins, name, norm=True):
       leg.get_frame().set_alpha(0.5)       # transparent legend
     ax.grid()                              # gridlines
   tight_layout() 
-  #savefig('../doc/images/' + name, dpi=300)
-  show()
-  return mus, sigs, array(bi_a), array(ct_a)
+  savefig('../doc/images/' + name, dpi=300)
+  #show()
+  return array(bi_a), array(ct_a), mus, sigs
 
-# get the non-normalized data :
-nbins = 100
-mus, sigs, bins, cts = plot_dist(train, train_class,  nbins, 
-                                 'not_normed_original', norm=False)
-# get the normalized data :
-#mus, sigs, bins, cts = plot_dist(train, train_class, nbins,
-#                                 'normed_original',    norm=True)
-
-# develop a new training data with the same mean and standard deviation
-# as the original but with far fewer lemon (class = 4) observations.
-i = 1
-for mu, sig in zip(mus, sigs):
-  if i == 4:  nsamp = 1000
-  else:       nsamp = 10000
-  n      = len(mu)
-  b_samp = mu*ones((nsamp,n)) + sig*randn(nsamp,n)
-  if i == 1:
-    train_n       = b_samp
-    train_class_n = i*ones(nsamp)
-  else:
-    train_n       = vstack((train_n, b_samp))
-    train_class_n = append(train_class_n, i*ones(nsamp))
-  i += 1
-
-# get the non-normalized data :
-mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, nbins,
-                                         'not_normed_new', norm=False)
-# get the normalized data :
-#mus_n, sigs_n, bins_n, cts_n = plot_dist(train_n, train_class_n, nbins,
-#                                         'normed_new',     norm=True)
-
-
-#===============================================================================
 def find_ct_index(bins, v):
   """
   Find the bin count index of value <v> in bin array <bins>.
@@ -169,22 +136,28 @@ def find_ct_index(bins, v):
   else:             cti = idx - 1
   return cti
 
-def classify_NB(test, test_class, train, train_class, bins, cts, 
-                param=False, mu=None, sig=None):
+def classify_NB(test, test_class, train, train_class, out, param=False):
   """
   Perform Naive Bays classification with test data array <test>, test class 
-  array <test_class>, training data array <train>, training class array 
-  <train_class>, bins <bins>, and bin counts <cts>.  If <param> is True, 
-  use the parametric approach with means and standard deviation matrices 
-  <mu> and <sig>.
-  """
-  P_test = []                     # Probability array
-  v_NB_a = []                     # classified class array
-  q      = len(train_class)       # total number of observations
-  vs     = unique(test_class)     # different possible values
-  m      = len(vs)                # number of different values
-  n      = shape(train)[1]        # number of different attributes
+  array <test_class>, training data array <train>, and training class array 
+  <train_class>.
   
+  The bins, bin counts, means, and standard deviation data structures are 
+  respectively stored in the tuple <out>, the output of the "plot_dist" 
+  function.
+  """
+  P_test = []                       # Probability array
+  v_NB_a = []                       # classified class array
+  q      = len(train_class)         # total number of observations
+  vs     = sort(unique(test_class)) # different possible values
+  m      = len(vs)                  # number of different values
+  n      = shape(train)[1]          # number of different attributes
+  
+  bins   = out[0]                   # n x m x (nbins + 1) matrix of bin bounds 
+  cts    = out[1]                   # n x m x nbins matrix of bin counts
+  mus    = out[2]                   # n x m matrix of attribute means
+  sigs   = out[3]                   # n x m matrix of attribute std. dev's
+
   # find total number of each values in training set :
   lens   = []
   for v in vs:
@@ -227,18 +200,16 @@ def classify_NB(test, test_class, train, train_class, bins, cts,
   print "Percent correct: %.1f%%" % (100 * num_corr / n)
   return v_NB_a
 
-v_NB   = classify_NB(test, test_class, train, train_class, bins, cts) 
-v_NB_p = classify_NB(test, test_class, train, train_class, bins, cts, 
-                     True, mus, sigs)
-v_NB_n = classify_NB(test, test_class, train, train_class, bins_n, cts_n)
-
-def plot_results(test_class, v_NB):
+def plot_results(test_class, v_NB, v_NB_p, name):
   """
   plot the absolute value of the differece between the true class <test_class>
   and classified class <v_NB>.
   """
   fig = figure(figsize=(12,4))
-  plot(abs(test_class - v_NB), drawstyle='steps-mid', lw=2.0)
+  plot(abs(test_class - v_NB),   'k',   drawstyle='steps-mid', 
+       lw=2.0, label='binned')
+  plot(abs(test_class - v_NB_p), 'r--', drawstyle='steps-mid', 
+       lw=2.0, label='param')
   for x,c in zip(range(len(test_class)), test_class):
     if c == 4: 
       text(x, 0.0, c, horizontalalignment='center',
@@ -248,10 +219,69 @@ def plot_results(test_class, v_NB):
   xlabel(r'$n$')
   ylim([-1, 2])
   grid()
-  show()
+  legend()
+  savefig('../doc/images/' + name + '_results.png', dpi=300)
+  #show()
 
-plot_results(test_class, v_NB)    # plot the results for original data
-plot_results(test_class, v_NB_p)  # plot the results for parametric approach
-plot_results(test_class, v_NB_n)  # plot the results for new data
+#===============================================================================
+# get the non-normalized data :
+nbins = 100
+name1 = 'not_normed_original'
+out   = plot_dist(train, train_class,  nbins, name1, norm=False)
+
+# get the normalized data :
+name2 = 'normed_original'
+out_n = plot_dist(train, train_class, nbins, name2, norm=True)
+
+
+#===============================================================================
+# develop a new training data with the same mean and standard deviation
+# as the original but with far fewer lemon (class = 4) observations.
+i = 1
+for mu, sig in zip(out[2], out[3]):
+  if i == 4:  nsamp = 1000
+  else:       nsamp = 10000
+  n      = len(mu)
+  b_samp = mu*ones((nsamp,n)) + sig*randn(nsamp,n)
+  if i == 1:
+    new_train       = b_samp
+    new_train_class = i*ones(nsamp)
+  else:
+    new_train       = vstack((new_train, b_samp))
+    new_train_class = append(new_train_class, i*ones(nsamp))
+  i += 1
+
+# get the non-normalized new data :
+name3   = 'not_normed_new'
+new_out = plot_dist(new_train, new_train_class, nbins, name3, norm=False)
+
+# get the normalized new data :
+name4     = 'normed_new'
+new_out_n = plot_dist(new_train, new_train_class, nbins,name4, norm=True)
+
+
+#===============================================================================
+# perform classification :
+v_NB     = classify_NB(test, test_class, train, train_class, out) 
+v_NB_p   = classify_NB(test, test_class, train, train_class, out, True)
+v_NB_n   = classify_NB(test, test_class, train, train_class, out_n)
+v_NB_n_p = classify_NB(test, test_class, train, train_class, out_n, True)
+
+new_v_NB     = classify_NB(test, test_class, new_train, new_train_class,
+                           new_out) 
+new_v_NB_p   = classify_NB(test, test_class, new_train, new_train_class, 
+                           new_out, True)
+new_v_NB_n   = classify_NB(test, test_class, new_train, new_train_class, 
+                           new_out_n)
+new_v_NB_n_p = classify_NB(test, test_class, new_train, new_train_class, 
+                           new_out_n, True)
+
+#===============================================================================
+# plot results :
+plot_results(test_class, v_NB,   v_NB_p,   name1)
+plot_results(test_class, v_NB_n, v_NB_n_p, name2)
+
+plot_results(test_class, new_v_NB,   new_v_NB_p,   name3)
+plot_results(test_class, new_v_NB_n, new_v_NB_n_p, name4)
 
 
