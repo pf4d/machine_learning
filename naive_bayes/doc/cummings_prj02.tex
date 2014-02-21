@@ -48,7 +48,7 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.4\textwidth]{images/results_original_not_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/not_normed_original_results.png}
 \end{figure}
 
 \begin{figure}[H]
@@ -59,7 +59,7 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.4\textwidth]{images/results_original_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/normed_original_results.png}
 \end{figure}
 
 \end{multicols}
@@ -73,7 +73,7 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.4\textwidth]{images/results_new_not_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/not_normed_new_results.png}
 \end{figure}
 
 \begin{figure}[H]
@@ -84,18 +84,54 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.4\textwidth]{images/results_new_normed.png}
+		\includegraphics[width=0.4\textwidth]{images/normed_new_results.png}
 \end{figure}
 
 \end{multicols}
 
 \newpage
 
-Using a $m$-estimation scheme has also been performed for the binned data probabilities.  This converts the probabilities 
+An $m$-estimation scheme has also been utilized for the binned data probabilities.  This converts the probabilities into
 
-$$P(a_i | v_j) = \frac{n_c + mp}{n + m},$$
+$$P(a_i | v_j) = \frac{n_{v_i} + mp}{n + m},$$
 
-where $m$ is the number of bins used and $p=1/m$.
+where $n_{v_i}$ is the number values with attribute $a_i$, $n$ is the total number of values observed with attribute $a_i$, $m$ is the size of the training set, and $p=1/m$.  This scheme removes difficulties which arise when $n_c$ or $n$ is zero.  The results using non-normalized and normalized data, along with their parameteric counterparts are shown below.
+
+\begin{table}[H]
+\parbox{.45\linewidth}
+{
+  \centering
+  \begin{tabular}{ c | c c c }
+    bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
+    \hline
+    10  & 93 & 92 & 97 \\
+    20  & 91 & 93 & 97 \\
+    50  & 88 & 89 & 97 \\
+    100 & 88 & 92 & 97 \\
+  \end{tabular}
+  \caption{Results for the original data set.}
+  \label{tbl:tablelabel}
+}
+\hfill
+\parbox{.45\linewidth}
+{
+  \centering
+  \begin{tabular}{ c | c c c }
+    bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
+    \hline
+    10  & 75 & 80 & 98 \\
+    20  & 73 & 82 & 97 \\
+    50  & 74 & 81 & 99 \\
+    100 & 75 & 81 & 98 \\
+  \end{tabular}
+  \caption{Results for the new data set.}
+  \label{tbl:tablelabel}
+}
+\end{table}
+
+These results show that even with the normalization, the accuracy is still less than the parameterized estimate.  This may be due to a bug in the code...
+ 
+
 \end{document}
 
 

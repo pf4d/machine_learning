@@ -22,7 +22,8 @@ mpl.rcParams['legend.fontsize'] = 'medium'
 # collect the data :
 # columns : Redness, Yellowness, Mass, Volume, Class
 
-dirc  = '../data/'
+nbins = int(sys.argv[1]) # the number of bins
+dirc  = '../data/'       # directory containing data
 
 # classes "lookup table" :
 classes = {1 : 'apple',   2 : 'peach',      3 : 'orange', 4 : 'lemon'}
@@ -186,7 +187,7 @@ def classify_NB(test, test_class, train, train_class, out, param=False):
             P_ij       = cts[i,j,k] + 1.0
             P_mat[j,i] = P_ij
     sum_i   = sum(P_mat,  axis=0)  # sum over each class probability
-    P_mat  /= (sum_i + lens)       # normalize the probabilities
+    P_mat  /= (sum_i + q)          # normalize the probabilities
     Pa_vj   = prod(P_mat, axis=1)  # find the product of probabilities
     prior   = Pvj * Pa_vj          # the prior
     v_NB    = argmax(prior) + 1    # find the maximum index of probability
@@ -225,9 +226,8 @@ def plot_results(test_class, v_NB, v_NB_p, name):
 
 #===============================================================================
 # get the non-normalized data :
-nbins = 100
 name1 = 'not_normed_original'
-out   = plot_dist(train, train_class,  nbins, name1, norm=False)
+out   = plot_dist(train, train_class, nbins, name1, norm=False)
 
 # get the normalized data :
 name2 = 'normed_original'
@@ -253,11 +253,11 @@ for mu, sig in zip(out[2], out[3]):
 
 # get the non-normalized new data :
 name3   = 'not_normed_new'
-new_out = plot_dist(new_train, new_train_class, nbins, name3, norm=False)
+new_out = plot_dist(new_train,   new_train_class, nbins, name3, norm=False)
 
 # get the normalized new data :
 name4     = 'normed_new'
-new_out_n = plot_dist(new_train, new_train_class, nbins,name4, norm=True)
+new_out_n = plot_dist(new_train, new_train_class, nbins, name4, norm=True)
 
 
 #===============================================================================
