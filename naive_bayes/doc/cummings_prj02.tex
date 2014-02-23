@@ -16,7 +16,7 @@ First, Bays theorem states that
 
 $$ P(v_j | a_1, a_2, \ldots, a_n) = \frac{P(a_1, a_2, \ldots, a_n | v_j) P(v_j)}{P(a_1,a_2,\ldots,a_n)},$$
 
-where $a$ is the attribute, $v$ is a value, $j$ is the number of different values and $n$ is the number of attributes.  If we assume conditional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
+where $a$ is the attribute, $v$ is a value, $j = 1,2,\ldots,m$ is the number of different values for $m$ observations, and $n$ is the number of attributes.  If we assume conditional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
 
 \begin{align}
   v_{NB} = \argmax_{v_j \in V}\left\{ P(v_j) \prod_i P(a_i | v_j) \right\},
@@ -28,7 +28,7 @@ If we have a set of $m$ observations for each of the attributes $a_i$, $i = 1,2,
 
 $$f(v,\mu, \sigma) = \frac{1}{\sigma \sqrt{2\pi}} \exp\left( -\frac{(v-\mu)^2}{2\sigma^2} \right),$$
 
-where $\mu$ is the mean of the data and $\sigma$ is the standard deviation.  However, if we simplify further and simply use the binned data, we can eliminate any distribution requirements and simply use the data itself to classify new values.  Using this method requires either the same number of observations for each value, or normalization of the bins such that the sum of all the areas of each bin's rectangle is equal to one, i.e., the data are represented by a probability mass function:
+where $\mu$ is the mean of the data and $\sigma$ is the standard deviation.  However, if we simplify further and simply use the binned data, we can eliminate any distribution requirements and simply use the data itself to classify new values.  Using this method requires either the same number of observations for each value, or normalization of the bins such that the sum of all the areas of each bin's rectangle is equal to one and $P(v_j) = P(v_i)$ for all $i,j \in [1,m]$.  i.e., the data are represented by a probability mass function:
 
 \begin{align*}
   \int_v f(v,\mu,\sigma) dv &= 1, && \text{continuous distribution} \\
@@ -79,7 +79,7 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 \begin{figure}[H]
   \centering
 		\includegraphics[width=0.4\textwidth]{images/normed_new.png}
-  \caption{\scriptsize The same data set as in Figure 3 but with the data normalized.  Note the vastly superior classification of lemons in the below results when compared to Figure 3.}
+  \caption{\scriptsize The same data set as in Figure 3 but with the data normalized.  Note that the results are about the same as Figure 3.  However, if we adjust $P(v_j)$ in Equation (1) to be equal for all $j$, similar results to the parametric approach may be obtained.  See Figure (5).}
 \end{figure}
 
 \begin{figure}[H]
@@ -91,11 +91,17 @@ To better illustrate the problem, I have run Naive Bayes classification on the f
 
 \newpage
 
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=1.0\textwidth]{images/normed_new_results_fixed_prob.png}
+  \caption{\scriptsize Results for the N.B.\ classification with adjusted $P(v_j)$ in Equation (1) to be equal for all $j$.  Note the vast improvement from Figure (4).}
+\end{figure}
+
 An $m$-estimation scheme has also been utilized for the binned data probabilities.  This converts the probabilities into
 
 $$P(a_i | v_j) = \frac{n_{v_i} + mp}{n + m},$$
 
-where $n_{v_i}$ is the number values with attribute $a_i$, $n$ is the total number of values observed with attribute $a_i$, $m$ is the size of the training set, and $p=1/m$.  This scheme removes difficulties which arise when $n_c$ or $n$ is zero.  The results using non-normalized and normalized data, along with their parameteric counterparts are shown below.
+where $n_{v_i}$ is the number values with attribute $a_i$, $n$ is the total number of values observed with attribute $a_i$, $m$ is the size of the training set, and $p=1/m$.  This scheme removes difficulties which arise when $n_c$ or $n$ is zero.  The results using non-normalized and normalized data, along with their parametric counterparts are shown below.
 
 \begin{table}[H]
 \parbox{.45\linewidth}
@@ -129,7 +135,25 @@ where $n_{v_i}$ is the number values with attribute $a_i$, $n$ is the total numb
 }
 \end{table}
 
-These results show that even with the normalization, the accuracy is still less than the parameterized estimate.  This may be due to a bug in the code...
+\begin{table}[H] 
+\centering
+\begin{tabular}{ c | c c c }
+  bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
+  \hline
+  10  & 76 & 89 & 98 \\
+  20  & 75 & 93 & 99 \\
+  50  & 73 & 91 & 97 \\
+  100 & 72 & 91 & 99 \\
+\end{tabular}
+\caption{Results for the new data set with $P(v_j) = P(v_i)$.}
+\label{tbl:tablelabel}
+\end{table}
+
+\subsection*{Discussion}
+
+Table (2) shows that even with the normalization, the accuracy is still less than the parametrized estimate.  This is due to the fact that the value $P(v_j)$ in Equation (1) down-weights the values with low numbers of observations.  See Figure (5) and Table (3) for the results with $P(v_j) = P(v_i)\ \forall\ i,j \in [1,m]$.
+
+Please note that if this is worth publishing, the results with probabilities not adjusted would not be provided.  This has been included as part of the development process.
  
 
 \end{document}
