@@ -61,6 +61,33 @@ train_class = loadtxt(train_f, dtype='int', delimiter=",",
                       usecols=(9,), skiprows=1)
 
 
+def entropy(S):
+  """
+  Calculate the entropy of a collection <S>.
+  """
+  E = 0
+  n = len(S)
+  for si in unique(S):
+    c  = S[S == si]
+    m  = float(len(c))
+    pi = m/n
+    E -= pi*log2(pi)
+  return E
+
+def gain(S,A):
+  """
+  Calculate the information gain from a set <S> across an attribute <A>.
+  """
+  g = entropy(S)
+  V = unique(A)
+  n = len(S)
+  for v in V:
+    Sv = S[S == v]
+    m  = float(len(Sv))
+    g -= m / n * entropy(Sv)
+  return g
+
+
 ###===============================================================================
 ### functions used to solve :
 ##
