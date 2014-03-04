@@ -1,10 +1,10 @@
-# naive_bayes.py
+# decision_tree.py
 # Evan Cummings
 # CSCI 544 - Machine Learning
 # Spring 2014 - Doug Raiford
 
-# This script uses the naive Bayes method to classify a set of fruit data.  The
-# accuracy is reported along with the time to compute.
+# This script uses the decision tree method to classify a set of tumor data.  
+# The accuracy is reported along with the time to compute.
 #
 
 import csv
@@ -63,31 +63,6 @@ train_class = loadtxt(train_f, dtype='int', delimiter=",",
 
 #===============================================================================
 # functions used to solve :
-def entropy(S):
-  """
-  Calculate the entropy of a collection <S>.
-  """
-  E = 0
-  n = len(S)
-  for si in unique(S):
-    c  = S[S == si]
-    m  = float(len(c))
-    pi = m/n
-    E -= pi*log2(pi)
-  return E
-
-def gain(S,A):
-  """
-  Calculate the information gain from a set <S> across an attribute <A>.
-  """
-  g = entropy(S)
-  V = unique(A)
-  n = len(S)
-  for v in V:
-    Sv = S[S == v]
-    m  = float(len(Sv))
-    g -= m / n * entropy(Sv)
-  return g
 
 def get_normal(x, mu, sigma):
   """ 
@@ -165,6 +140,86 @@ def plot_results(test_class, v, name):
   legend()
   #savefig('../doc/images/' + name + '_results.png', dpi=300)
   show()
+
+def entropy(S):
+  """
+  Calculate the entropy of a collection <S>.
+  """
+  E = 0
+  n = len(S)
+  for si in unique(S):
+    c  = S[S == si]
+    m  = float(len(c))
+    pi = m/n
+    E -= pi*log2(pi)
+  return E
+
+def gain(S,A):
+  """
+  Calculate the information gain from a set <S> across an attribute <A>.
+  """
+  S = S[:,A]
+  g = entropy(S)
+  V = unique(S)
+  n = len(S)
+  for v in V:
+    Sv = S[S == v]
+    m  = float(len(Sv))
+    g -= m / n * entropy(Sv)
+  return g
+
+def most_common(S):
+  counts = bincont(S)
+  return argmax(counts)
+
+class node(object):
+  
+  def __init__(self, label, children=None):
+  """
+  Node of a decision tree with label <label> and children nodes <children>.  
+  If <children> == None, this is either a leaf or a single-node tree.
+  """
+    self.label    = label
+    self.children = children
+
+  def add_child(self, child):
+    if self.children == None:
+      self.children == array([child])
+    else:
+      self.children = append(self.children, child)
+
+def ID3(S,Sc,A):
+  """
+  <S> is the training set with corresponding class <Sc>, <A> is a list of 
+  attributes that may be tested by the learned decision tree.  
+  Returns a decision tree that correctly classifies the given <S>.
+  """
+  classes = unique(Sc)                     # unique values
+  if len(classes) == 1:
+    return node(classes[0])                # return single-node tree
+  elif len(A) == 1:
+    label = most_common(Sc)                # find the most common class
+    return node(label)                     # return single-node tree
+  else:
+    gain_a = array([])                     # array of info gains
+    for a in A:
+      gain_a = append(gain_a, gain(S,a))   # find the info gain for each attrib
+    a_max    = argmax(gain_a)              # attrib. with highest info gain
+    root     = node(a_max)                 # create a new node
+    S_amax   = S[:,a_max]                  # column of S with attrib a_max
+    for v in unique(S_amax):
+      S_v = S[S_amax == v,:]               # subset of S with value v for Amax
+      if shape(S_v)[0] == 0:
+        Sc_v  = Sc[S_amax == v]            # classes for S_v
+        label = most_common(Sc_v)          # find the most common class
+        root.add_child(node(label))        # add the leaf
+      else:
+        Sc_v = Sc[S_amax == v]             # classes for S_v
+        A_v  = A.copy()                    # copy of classes for recursion
+        del A_v[a_max]                     # remove the attribute
+        child = ID3(S_v, Sc_v, A_v)        # recurse
+        root.add_child(child)              # add branch
+    return root
 
 
 #===============================================================================
