@@ -154,16 +154,17 @@ def entropy(S):
     E -= pi*log2(pi)
   return E
 
-def gain(S,A):
+def gain(S,Sc,A):
   """
-  Calculate the information gain from a set <S> across an attribute <A>.
+  Calculate the information gain from a set <S> with corresponding class <Sc> 
+  across an attribute <A>.
   """
   S = S[:,A]
-  g = entropy(S)
+  g = entropy(Sc)
   V = unique(S)
   n = len(S)
   for v in V:
-    Sv = S[S == v]
+    Sv = Sc[S == v]
     m  = float(len(Sv))
     g -= m / n * entropy(Sv)
   return g
@@ -200,32 +201,33 @@ def ID3(S,Sc,Sg,A):
   that may be tested by the learned decision tree.  
   Returns a decision tree that correctly classifies the given <S>.
   """
-  classes = unique(Sc)                      # unique values
-  m       = len(Sg)                         # number of attributes
-  if len(classes) == 1:                     
-    return node(classes[0])                 # return single-node tree
-  elif len(A) == 1:                         
-    label = most_common(Sc, A[0])           # find the most common class
-    return node(label)                      # return single-node tree
-  else:                                     
-    gain_a = zeros(m)                       # array of info gains
-    for a in A:                             
-      gain_a[a] = gain(S,a)                 # find the info gain for each attrib
-    a_max    = argmax(gain_a)               # attrib. with highest info gain
-    label    = most_common(Sc)              # find the most common class
-    root     = node(label, a_max)           # create a new node
-    S_amax   = S[:,a_max]                   # column of S with attrib a_max
-    for v in Sg[a_max]:                     
-      S_v = S[S_amax == v,:]                # subset of S with value v for Amax
-      if shape(S_v)[0] == 0:                
-        Sc_v  = Sc[S_amax == v]             # classes for S_v
-        root.add_child(node(label), v)      # add the leaf
+  classes = unique(Sc)                    # unique values
+  m       = len(Sg)                       # number of attributes
+  if len(classes) == 1:                   
+    return node(classes[0])               # return single-node tree
+  elif len(A) == 1:                       
+    label = most_common(Sc, A[0])         # find the most common class
+    return node(label)                    # return single-node tree
+  else:                                   
+    gain_a = zeros(m)                     # array of info gains
+    for a in A:                           
+      gain_a[a] = gain(S,Sc,a)            # find the info gain for each attrib
+    print gain_a
+    a_max    = argmax(gain_a)             # attrib. with highest info gain
+    label    = most_common(Sc)            # find the most common class
+    root     = node(label, a_max)         # create a new node
+    S_amax   = S[:,a_max]                 # column of S with attrib a_max
+    for v in Sg[a_max]:                   
+      S_v = S[S_amax == v,:]              # subset of S with value v for Amax
+      if shape(S_v)[0] == 0:              
+        Sc_v  = Sc[S_amax == v]           # classes for S_v
+        root.add_child(node(label), v)    # add the leaf
       else:
-        Sc_v = Sc[S_amax == v]              # classes for S_v
-        A_v  = A.copy()                     # copy of classes for recursion
-        del A_v[a_max]                      # remove the attribute
-        child = ID3(S_v, Sc_v, Sg, A_v)     # recurse
-        root.add_child(child, v)            # add branch
+        Sc_v = Sc[S_amax == v]            # classes for S_v
+        A_v  = A.copy()                   # copy of classes for recursion
+        del A_v[a_max]                    # remove the attribute
+        child = ID3(S_v, Sc_v, Sg, A_v)   # recurse
+        root.add_child(child, v)          # add branch
     return root
 
 #===============================================================================
@@ -251,7 +253,7 @@ for t,c in zip(test, test_class):
   else:
     correct.append(0)
 
-    
+print sum(correct)/float(len(correct))    
 
 
 
