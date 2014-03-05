@@ -169,60 +169,89 @@ def gain(S,A):
   return g
 
 def most_common(S):
-  counts = bincont(S)
+  counts = bincount(S)
   return argmax(counts)
 
 class node(object):
   
-  def __init__(self, label, children=None):
-  """
-  Node of a decision tree with label <label> and children nodes <children>.  
-  If <children> == None, this is either a leaf or a single-node tree.
-  """
+  def __init__(self, label, attrib=None, children=None):
+    """
+    Node of a decision tree with most common class <label> and children 
+    nodes <children>.  
+    If <children> == None, this is either a leaf or a single-node tree.
+    """
     self.label    = label
     self.children = children
+    self.attrib   = attrib
+    self.values   = None
 
-  def add_child(self, child):
+  def add_child(self, child, val):
     if self.children == None:
-      self.children == array([child])
+      self.children = array([child])
+      self.values   = array([val])
     else:
       self.children = append(self.children, child)
+      self.values   = append(self.values,   val)
 
-def ID3(S,Sc,A):
+def ID3(S,Sc,Sg,A):
   """
-  <S> is the training set with corresponding class <Sc>, <A> is a list of 
-  attributes that may be tested by the learned decision tree.  
+  <S> is the training set with corresponding class <Sc>, <Sg> is a matrix of 
+  unique values for all training and test data, and <A> is a list of attributes 
+  that may be tested by the learned decision tree.  
   Returns a decision tree that correctly classifies the given <S>.
   """
-  classes = unique(Sc)                     # unique values
-  if len(classes) == 1:
-    return node(classes[0])                # return single-node tree
-  elif len(A) == 1:
-    label = most_common(Sc)                # find the most common class
-    return node(label)                     # return single-node tree
-  else:
-    gain_a = array([])                     # array of info gains
-    for a in A:
-      gain_a = append(gain_a, gain(S,a))   # find the info gain for each attrib
-    a_max    = argmax(gain_a)              # attrib. with highest info gain
-    root     = node(a_max)                 # create a new node
-    S_amax   = S[:,a_max]                  # column of S with attrib a_max
-    for v in unique(S_amax):
-      S_v = S[S_amax == v,:]               # subset of S with value v for Amax
-      if shape(S_v)[0] == 0:
-        Sc_v  = Sc[S_amax == v]            # classes for S_v
-        label = most_common(Sc_v)          # find the most common class
-        root.add_child(node(label))        # add the leaf
+  classes = unique(Sc)                      # unique values
+  m       = len(Sg)                         # number of attributes
+  if len(classes) == 1:                     
+    return node(classes[0])                 # return single-node tree
+  elif len(A) == 1:                         
+    label = most_common(Sc, A[0])           # find the most common class
+    return node(label)                      # return single-node tree
+  else:                                     
+    gain_a = zeros(m)                       # array of info gains
+    for a in A:                             
+      gain_a[a] = gain(S,a)                 # find the info gain for each attrib
+    a_max    = argmax(gain_a)               # attrib. with highest info gain
+    label    = most_common(Sc)              # find the most common class
+    root     = node(label, a_max)           # create a new node
+    S_amax   = S[:,a_max]                   # column of S with attrib a_max
+    for v in Sg[a_max]:                     
+      S_v = S[S_amax == v,:]                # subset of S with value v for Amax
+      if shape(S_v)[0] == 0:                
+        Sc_v  = Sc[S_amax == v]             # classes for S_v
+        root.add_child(node(label), v)      # add the leaf
       else:
-        Sc_v = Sc[S_amax == v]             # classes for S_v
-        A_v  = A.copy()                    # copy of classes for recursion
-        del A_v[a_max]                     # remove the attribute
-        child = ID3(S_v, Sc_v, A_v)        # recurse
-        root.add_child(child)              # add branch
+        Sc_v = Sc[S_amax == v]              # classes for S_v
+        A_v  = A.copy()                     # copy of classes for recursion
+        del A_v[a_max]                      # remove the attribute
+        child = ID3(S_v, Sc_v, Sg, A_v)     # recurse
+        root.add_child(child, v)            # add branch
     return root
-
 
 #===============================================================================
 # perform classification :
+
+Sg = []
+for a in vstack((train, test)).T:
+  Sg.append(unique(a))
+Sg = array(Sg)
+
+tree = ID3(train, train_class, Sg, attrib)
+
+correct = []
+for t,c in zip(test, test_class):
+  node = tree
+  for a,v in enumerate(t):
+    while node.children != None:
+      for i,nv in enumerate(node.values):
+        if nv == v:
+          node = node.children[i]
+  if node.label == c:
+    correct.append(1)
+  else:
+    correct.append(0)
+
+    
+
 
 
