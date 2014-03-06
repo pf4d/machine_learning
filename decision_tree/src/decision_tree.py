@@ -117,28 +117,28 @@ def plot_dist(train, train_class, nbins, name, norm=True):
       leg.get_frame().set_alpha(0.5)       # transparent legend
     ax.grid()                              # gridlines
   tight_layout() 
-  #savefig('../doc/images/' + name, dpi=300)
+  savefig('../doc/images/' + name, dpi=300)
   show()
   return mus, sigs
 
-def plot_results(test_class, v, name):
+def plot_results(test_class, v, name, label=None):
   """
   plot the absolute value of the differece between the true class <test_class>
-  and classified class <v_NB>.
+  and classified class <v> with classifier acronym <name>.
   """
   fig = figure(figsize=(12,4))
-  plot(abs(test_class - v), 'k', drawstyle='steps-mid', lw=2.0, label='binned')
+  plot(abs(test_class - v), 'k', drawstyle='steps-mid', lw=2.0, label=label)
   for x,c in zip(range(len(test_class)), test_class):
     if c == 4: 
       text(x, 0.0, c, horizontalalignment='center',
                       verticalalignment='center')
   tight_layout()
-  title(r'$|v - v_{NB}|$')
+  title(r'$|v - v_{%s}|$' % name)
   xlabel(r'$n$')
   ylim([-1, 2])
   grid()
-  legend()
-  #savefig('../doc/images/' + name + '_results.png', dpi=300)
+  if label != None: legend()
+  savefig('../doc/images/' + name + '_results.png', dpi=300)
   show()
 
 def entropy(S):
@@ -177,8 +177,8 @@ class node(object):
   
   def __init__(self, label, attrib=None, children=None):
     """
-    Node of a decision tree with most common class <label> and children 
-    nodes <children>.  
+    Node of a decision tree node for attribute <attrib> with most common 
+    class <label> and children nodes <children>.
     If <children> == None, this is either a leaf or a single-node tree.
     """
     self.label    = label
@@ -204,15 +204,14 @@ def ID3(S,Sc,Sg,A):
   classes = unique(Sc)                    # unique values
   m       = len(Sg)                       # number of attributes
   if len(classes) == 1:                   
-    return node(classes[0])               # return single-node tree
+    return node(classes[0])               # return leaf node
   elif len(A) == 1:                       
     label = most_common(Sc, A[0])         # find the most common class
-    return node(label)                    # return single-node tree
+    return node(label)                    # return leaf node
   else:                                   
     gain_a = zeros(m)                     # array of info gains
     for a in A:                           
       gain_a[a] = gain(S,Sc,a)            # find the info gain for each attrib
-    print gain_a
     a_max    = argmax(gain_a)             # attrib. with highest info gain
     label    = most_common(Sc)            # find the most common class
     root     = node(label, a_max)         # create a new node
@@ -230,30 +229,47 @@ def ID3(S,Sc,Sg,A):
         root.add_child(child, v)          # add branch
     return root
 
+def classify_DT(test, tree):
+  """
+  Classify single test case <test> with decision tree <tree>.
+  """
+  nde = tree                              # starting node
+  # percolate through the tree :
+  while nde.children != None:
+    tv = t[nde.attrib]                    # corresponding value to node attrib.
+    # find the branch to explore next :
+    for i,v in enumerate(nde.values):
+      if tv == v:
+        nde = nde.children[i]             # set the node to the next attrib.
+  return nde
+
 #===============================================================================
 # perform classification :
 
+# plot the data:
+mus, sigs = plot_dist(train, train_class, 10, 'DT')
+
+# form array of unique values in S :
 Sg = []
 for a in vstack((train, test)).T:
   Sg.append(unique(a))
 Sg = array(Sg)
 
+# discover the decision tree :
 tree = ID3(train, train_class, Sg, attrib)
 
-correct = []
+# evaluate the test set and calculate accuracy :
+v_DT = []
 for t,c in zip(test, test_class):
-  node = tree
-  for a,v in enumerate(t):
-    while node.children != None:
-      for i,nv in enumerate(node.values):
-        if nv == v:
-          node = node.children[i]
-  if node.label == c:
-    correct.append(1)
-  else:
-    correct.append(0)
+  nde = classify_DT(t, tree)
+  v_DT.append(nde.label)
 
-print sum(correct)/float(len(correct))    
+# print the result (here 90.0%) :
+correct = test_class == v_DT
+print "percentage correct : %.1f%%" % (100*sum(correct)/float(len(correct)))
+
+# plot the results :
+plot_results(test_class, v_DT, 'DT')
 
 
 
