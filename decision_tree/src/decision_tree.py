@@ -77,7 +77,7 @@ def plot_dist(train, train_class, nbins, name, norm=True):
   class <train_class> with number of bins <nbins>, title <name>.  If <norm> 
   is True, the bins are normalized.
 
-  Returns the means, standard deviations, bins, and bin counts as a tuple.
+  Returns the means and standard deviations as a tuple.
   
   Image is saved in directory ../doc/images/.
   """
