@@ -73,22 +73,43 @@ def plot_results(test_class, v, name, label=None):
 
 # get the unique values of each column:
 def find_unique_col(S):
+  """
+  find the unique values of each column of array <S>.
+  """
   unq = []
   for i in range(shape(S)[1]):
     unq.append(unique(S[:,i]))
-  return unq
+  return array(unq)
 
-# find the unique values of each row:
 def find_unique_row(S):
+  """
+  find the unique values of each row of array <S>.
+  """
   unq = unique(S.view(S.dtype.descr * S.shape[1]))
   return unq.view(S.dtype).reshape(-1, S.shape[1])
 
 def get_wild(unq, unq_i):
+  """
+  determine if unique set <unq> is the same as unique set <unq_i>.
+  """
   wild = []
   for uc, up in zip(unq, unq_i):
     if len(uc) == len(up): wild.append(True)
     else:                  wild.append(False)
   return array(wild)
+
+def get_spec(unq_i, unq_j):
+  """ 
+  determine if any element of <unq_i> is in <unq_j>.  If so, element is False,
+  otherwise element is True.
+  """
+  spec = []
+  for ui, uj in zip(unq_i, unq_j):
+    if len(intersect1d(ui, uj)) != 0:
+      spec.append(False)
+    else:
+      spec.append(True)
+  return array(spec)
 
 # truncate the data to only the unique instances :
 data = find_unique_row(data)
@@ -103,6 +124,8 @@ unq_neg = find_unique_col(data[:,:-1][neg])
 
 wild_neg = get_wild(unq_col, unq_neg)
 wild_pos = get_wild(unq_col, unq_pos)
+
+spec = get_spec(unq_neg, unq_pos)
 
 for i,D in enumerate(data[:,:-1][pos]):
   if i == 0: S = D
