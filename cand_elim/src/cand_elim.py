@@ -12,8 +12,9 @@ import sys
 
 import matplotlib.gridspec as gridspec
 
-from time  import time
-from pylab import *
+from itertools import permutations, combinations
+from time      import time
+from pylab     import *
 
 mpl.rcParams['font.family']     = 'serif'
 mpl.rcParams['legend.fontsize'] = 'medium'
@@ -76,10 +77,13 @@ def find_unique_col(S):
   """
   find the unique values of each column of array <S>.
   """
-  unq = []
+  unq  = []
+  lens = []
   for i in range(shape(S)[1]):
-    unq.append(unique(S[:,i]))
-  return array(unq)
+    t = unique(S[:,i])
+    unq.append(t)
+    lens.append(len(t))
+  return array(unq), array(lens)
 
 def find_unique_row(S):
   """
@@ -88,28 +92,43 @@ def find_unique_row(S):
   unq = unique(S.view(S.dtype.descr * S.shape[1]))
   return unq.view(S.dtype).reshape(-1, S.shape[1])
 
-def get_wild(unq, unq_i):
+def get_general(unq, unq_i):
   """
   determine if unique set <unq> is the same as unique set <unq_i>.
   """
   wild = []
   for uc, up in zip(unq, unq_i):
-    if len(uc) == len(up): wild.append(True)
-    else:                  wild.append(False)
+    if len(uc) == len(up): wild.append(False)
+    else:                  wild.append(True)
   return array(wild)
 
-def get_spec(unq_i, unq_j):
+def get_specific(unq_i, unq_j):
   """ 
   determine if any element of <unq_i> is in <unq_j>.  If so, element is False,
   otherwise element is True.
   """
   spec = []
   for ui, uj in zip(unq_i, unq_j):
-    if len(intersect1d(ui, uj)) != 0:
-      spec.append(False)
-    else:
+    inter = intersect1d(ui, uj)
+    if len(inter) == 0:
       spec.append(True)
+    elif len(inter) == len(uj):
+      spec.append(True)
+    else:
+      spec.append(False)
   return array(spec)
+
+
+# test data from the book :
+data1 = array(['Sunny','Warm','Normal','Strong','Warm','Same','Enjoy Sport'], 
+              dtype='|S12')
+data2 = array(['Sunny','Warm','High','Strong','Warm','Same','Enjoy Sport'], 
+              dtype='|S12')
+data3 = array(['Rainy','Cold','High','Strong','Warm','Change','Do Not Enjoy'], 
+              dtype='|S12')
+data4 = array(['Sunny','Warm','High','Strong','Cool','Change','Enjoy Sport'], 
+              dtype='|S12')
+#data = vstack((data1, data2, data3, data4))
 
 # truncate the data to only the unique instances :
 data = find_unique_row(data)
@@ -118,23 +137,34 @@ data = find_unique_row(data)
 pos = data[:,-1] == classes[1]
 neg = data[:,-1] == classes[0]
 
-unq_col = find_unique_col(data[:,:-1])
-unq_pos = find_unique_col(data[:,:-1][pos])
-unq_neg = find_unique_col(data[:,:-1][neg])
+unq_col, col_len = find_unique_col(data[:,:-1])
+unq_pos, pos_len = find_unique_col(data[:,:-1][pos])
+unq_neg, neg_len = find_unique_col(data[:,:-1][neg])
 
-wild_neg = get_wild(unq_col, unq_neg)
-wild_pos = get_wild(unq_col, unq_pos)
+gen = get_general(unq_col, unq_pos)
+spc = get_specific(unq_neg, unq_pos)
 
-spec = get_spec(unq_neg, unq_pos)
 
-for i,D in enumerate(data[:,:-1][pos]):
-  if i == 0: S = D
-  else:
-    for d,s in zip(D,S):
-      inter = intersect1d([d], s)
-      if len(inter) == 0: 
-        S = vstack((S, D))
-        break
+print "\n specific cases :"
+print "------------------------------------------------"
+t = where(spc)[0]
+for k in range(2, len(t) + 1):
+  for s in combinations(t, k):
+    idx  = array(s)
+    temp = zeros(len(unq_pos), dtype='S12')
+    for i in idx:
+      temp[i] = unq_pos[i][0]
+    print temp
+
+print "\n general cases :"
+print "------------------------------------------------"
+t = where(gen)[0]
+for s in combinations(t, 1):
+  idx  = array(s)
+  temp = zeros(len(unq_pos), dtype='S12')
+  for i in idx:
+    temp[i] = unq_pos[i][0]
+  print temp
 
 
 
