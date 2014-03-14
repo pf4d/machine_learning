@@ -92,32 +92,26 @@ def find_unique_row(S):
   unq = unique(S.view(S.dtype.descr * S.shape[1]))
   return unq.view(S.dtype).reshape(-1, S.shape[1])
 
-def get_general(unq, unq_i):
-  """
-  determine if unique set <unq> is the same as unique set <unq_i>.
-  """
-  wild = []
-  for uc, up in zip(unq, unq_i):
-    if len(uc) == len(up): wild.append(False)
-    else:                  wild.append(True)
-  return array(wild)
-
-def get_specific(unq_i, unq_j):
-  """ 
-  determine if any element of <unq_i> is in <unq_j>.  If so, element is False,
-  otherwise element is True.
-  """
-  spec = []
-  for ui, uj in zip(unq_i, unq_j):
-    inter = intersect1d(ui, uj)
+def get_gen_and_spec(unq, unq_pos, unq_neg):
+  spc = []
+  gen = []
+  for up, un in zip(unq_pos, unq_neg):
+    inter = intersect1d(up, un)
+    # none of up intersect with un :
     if len(inter) == 0:
-      spec.append(True)
-    elif len(inter) == len(uj):
-      spec.append(True)
+      spc.append(True)
+    # up == un :
+    elif len(inter) == len(up) and len(inter) == len(un):
+      spc.append(True)
+    # up != un :
     else:
-      spec.append(False)
-  return array(spec)
-
+      spc.append(False)
+  spc = array(spc)
+  for uc, up in zip(unq, unq_pos):
+    if len(uc) == len(up): gen.append(False)
+    else:                  gen.append(True)
+  gen = array(gen) & spc
+  return spc, gen
 
 # test data from the book :
 data1 = array(['Sunny','Warm','Normal','Strong','Warm','Same','Enjoy Sport'], 
@@ -128,7 +122,7 @@ data3 = array(['Rainy','Cold','High','Strong','Warm','Change','Do Not Enjoy'],
               dtype='|S12')
 data4 = array(['Sunny','Warm','High','Strong','Cool','Change','Enjoy Sport'], 
               dtype='|S12')
-#data = vstack((data1, data2, data3, data4))
+data = vstack((data1, data2, data3, data4))
 
 # truncate the data to only the unique instances :
 data = find_unique_row(data)
@@ -141,30 +135,47 @@ unq_col, col_len = find_unique_col(data[:,:-1])
 unq_pos, pos_len = find_unique_col(data[:,:-1][pos])
 unq_neg, neg_len = find_unique_col(data[:,:-1][neg])
 
-gen = get_general(unq_col, unq_pos)
-spc = get_specific(unq_neg, unq_pos)
+spc, gen = get_gen_and_spec(unq_col, unq_pos, unq_neg)
 
+n   = len(unq_pos)
 
-print "\n specific cases :"
-print "------------------------------------------------"
 t = where(spc)[0]
+g = ((pos_len - neg_len) > 0) & gen
+result = []
 for k in range(2, len(t) + 1):
+  print "\n %i wild :" % (n - k)
+  print "--------------------------------------------------"
   for s in combinations(t, k):
     idx  = array(s)
     temp = zeros(len(unq_pos), dtype='S12')
     for i in idx:
       temp[i] = unq_pos[i][0]
+    result.append(temp)
     print temp
 
-print "\n general cases :"
-print "------------------------------------------------"
 t = where(gen)[0]
+print "\n %i wild :" % (n - 1)
+print "--------------------------------------------------"
 for s in combinations(t, 1):
   idx  = array(s)
   temp = zeros(len(unq_pos), dtype='S12')
   for i in idx:
     temp[i] = unq_pos[i][0]
+  result.append(temp)
   print temp
+result  = array(result)
+
+multval = unq_pos[g]
+for mv,i in zip(multval, where(g==True)[0]):
+  zi = where(result[:,i] == mv[0])[0]
+  new = result[zi]
+  for v in mv[1:]:
+    new[:,i] = v
+
+if len(multval) > 0: result = vstack((result, new))
+print "\n\n final results with any multivalues added :"
+print "--------------------------------------------------"
+print result
 
 
 
