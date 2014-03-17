@@ -58,8 +58,10 @@ These four cases cover all possibilities for the different values of $\mathcal{P
         \State $\mathcal{N}_j :=$ unique positive values of $\mathcal{D}_{\cdot,j}$
         \If{$\#(\mathcal{P}_j \cap \mathcal{N}_{j}) = 0$}
           \State $\mathcal{S}_j := 1,\ \mathcal{G}_j := 1$
-        \ElsIf{$\#(\mathcal{P}_j \cap \mathcal{N}_j) \neq \#(\mathcal{N}_j)$ \textbf{and} $\#(\mathcal{N}_j) > \#(\mathcal{P}_j)$}
+        \ElsIf{$\#(\mathcal{N}_j) > \#(\mathcal{P}_j)$}
           \State $\mathcal{S}_j := 1,\ \mathcal{G}_j := 0$
+        \ElsIf{$\#(\mathcal{N}_j) < \#(\mathcal{P}_j)$}
+          \State $\mathcal{S}_j := 0,\ \mathcal{G}_j := 0$
         \ElsIf{$\mathcal{P}_j \equiv \mathcal{N}_j$}
           \If{$\#(\mathcal{N}_j) = 1$ \textbf{and} $\#(\mathcal{P}_j) = 1$}
             \State $\mathcal{S}_j := 1$
@@ -67,8 +69,6 @@ These four cases cover all possibilities for the different values of $\mathcal{P
             \State $\mathcal{S}_j := 0$
           \EndIf
           \State $\mathcal{N}_j := 0$
-        \Else
-          \State $\mathcal{S}_j := 0,\ \mathcal{G}_j := 0$
         \EndIf
       \EndFor
       \State $\mathcal{T}_s := \{i : \mathcal{S}_i = 1\}$

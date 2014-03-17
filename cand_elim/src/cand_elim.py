@@ -111,6 +111,10 @@ def candidate_elimination(data, classes):
     elif nn > pn:
       spc.append(True)
       gen.append(False)
+    # there are more positives than negatives : 
+    elif nn < pn:
+      spc.append(False)
+      gen.append(False)
     # all intersect :
     elif len(inter) == nn and nn == pn:
       # if there is only one choice of positive and negative value :
@@ -119,10 +123,6 @@ def candidate_elimination(data, classes):
       # if there is more than one choice of positive value :
       else:
         spc.append(False)
-      gen.append(False)
-    # there are more positives than negatives : 
-    else:
-      spc.append(False)
       gen.append(False)
   
   # convert to arrays :
@@ -136,7 +136,8 @@ def candidate_elimination(data, classes):
   vs = []                                  # final version space
   multval = unq_pos[g]                     # multiple positive values
   
-  # add to the version space all combinations of the specific values :
+  # add to the version space all combinations of the specific values, this
+  # corresponds to the most specific boundary :
   for k in range(2, len(ts) + 1):
     print "\n %i wild :" % (n - k)
     print "--------------------------------------------------"
