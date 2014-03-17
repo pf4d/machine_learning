@@ -20,10 +20,22 @@
 \newcommand{\V}{\mathcal{V}}
 \newcommand{\E}{\mathcal{E}}
 \newcommand{\K}{\mathcal{K}}
+\newcommand{\Q}{\mathcal{Q}}
 \newcommand{\T}{^\intercal}
 
 \newcommand{\sups}[1]{\ensuremath{^{\textrm{#1}}}}
 \newcommand{\subs}[1]{\ensuremath{_{\textrm{#1}}}}
+
+\floatstyle{plain}
+\newfloat{myalgo}{tbhp}{mya}
+\newenvironment{Algorithm}[2][tbh]%
+{\begin{myalgo}[#1]
+\centering
+\begin{minipage}{#2}
+\begin{algorithm}[H]}%
+{\end{algorithm}
+\end{minipage}
+\end{myalgo}}
 
 \newcommand{\specialcell}[2][c]
 {
