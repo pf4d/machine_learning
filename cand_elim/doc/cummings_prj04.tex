@@ -15,13 +15,15 @@ CSCI 544 - Machine Learning}
 
 \section*{Abstract}
 
-The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  To accomplish this, the algorithm iterates through the data and alters the specific and general boundaries such that they become minimally more general and specific, respectively.  The approach described here explains how these boundaries and thus version space may be derived using only the unique values of the data-set.
+The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters the specific and general boundaries such that they become minimally more general and specific, respectively.  The approach described here seeks to reduce the complexity of the algorithm by evaluating the columns of the data instead of the rows. We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
 
 \section*{Description}
 
-let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.  In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
+let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.
 
-Using this description, the intermediate values of the version space $\mathcal{V}$ may be derived from $\mathcal{S}$ by taking all combinations of $\mathcal{S}$ choosing from two elements up to $n-1$ where $n$ is the number of true positions in $\mathcal{S}$.  The remaining elements of $\mathcal{V}$ correspond to the most general boundary of $\mathcal{D}$ and are all possible one-combinations of the set $\mathcal{G}$.
+In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
+
+Using this description, the intermediate values of the version space $\mathcal{V}$ may be derived from $\mathcal{S}$ by taking all combinations of $\mathcal{S}$ choosing from two elements up to $n-1$ where $n$ is the number of true positions in $\mathcal{S}$.  The remaining elements of $\mathcal{V}$ correspond to the most general boundary of $\mathcal{D}$ and are all possible one non-wild combinations of the set $\mathcal{G}$.
 
 \section*{Determining $\mathcal{S}$ and $\mathcal{G}$}
 
@@ -33,12 +35,12 @@ Likewise, if instead the number of values in $\mathcal{N}_j$ is less than the nu
 
 Finally, if $\mathcal{P}_j$ is equivalent to $\mathcal{N}_j$, we know that $\mathcal{G}_j$ is false; the general boundary does not have a specific value for dimension $j$.  However, a subtle distinction for the value of $\mathcal{S}_j$ in this case exists.  If there is only one possible value for both $\mathcal{P}_j$ and $\mathcal{N}_j$, $\mathcal{S}_j$ is true, otherwise, it is false -- we have a specific value for the specific boundary in the case that all possible values of dimension $j$ are the same.
 
-These four cases cover all possibilities for the different values of $\mathcal{P}$ and $\mathcal{N}$ and thus completely describe the specific and general boundaries of the version space corresponding to $\mathcal{D}$.  Pseudo-code is presented below, as well as Python code demonstrating 10-fold cross-validated 99.8 - 100 \% accuracy.
+These four cases cover all possibilities for the different values of $\mathcal{P}$ and $\mathcal{N}$ and thus describe completely the specific and general boundaries, $\mathcal{S}$ and $\mathcal{G}$, of the version space corresponding to $\mathcal{D}$.  Pseudo-code is presented below, as well as a Python implementation demonstrating 10-fold cross-validated 99.8 - 100 \% accuracy for the data-set presented in the book.
 
 \section*{Pseudo-code}
 
 \begin{Algorithm}[H]{12cm}
-  \caption{ - Candidate Elimination}
+  \caption{ - Modified Candidate Elimination}
   \begin{algorithmic} 
     \State \textbf{INPUTS}: 
     \State \ \ \ $\mathcal{D}$ - $m \times n$ Data matrix,
@@ -49,7 +51,7 @@ These four cases cover all possibilities for the different values of $\mathcal{P
     \State \ \ \ $\mathcal{V}$ - Version space.
     \\
     \hrulefill
-    \Function{Ce}{$\mathcal{D},\mathcal{C}$}
+    \Function{mCe}{$\mathcal{D},\mathcal{C}$}
       \State $\mathcal{S} := \emptyset$
       \State $\mathcal{G} := \emptyset$
       \State $\mathcal{V} := \emptyset$
