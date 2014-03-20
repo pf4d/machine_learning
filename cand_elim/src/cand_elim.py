@@ -99,6 +99,10 @@ def candidate_elimination(data, classes):
   
   spc = []  # specific boundary
   gen = []  # general boundary
+ 
+  if sum(pos_len) == 0:
+    print "ERROR: THERE ARE NO POSITIVE VALUES - ALGORITHM EXITS"
+    sys.exit(0)
   
   # iterate through all the unique values and determine the boundaries :
   for i, (up, un, pn, nn) in enumerate(zip(unq_pos, unq_neg, pos_len, neg_len)):

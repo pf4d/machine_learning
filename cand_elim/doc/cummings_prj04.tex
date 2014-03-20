@@ -15,11 +15,13 @@ CSCI 544 - Machine Learning}
 
 \section*{Abstract}
 
-The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters the specific and general boundaries such that they become minimally more general and specific, respectively.  The approach described here seeks to reduce the complexity of the algorithm by evaluating the columns of the data instead of the rows. We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
+The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters the specific and general boundaries such that they become minimally more general and specific, respectively.  The approach described here imposes the additional requirement that the positive values differ from the negative values in at least one dimension; this has the effect of reducing the complexity of the algorithm to the columns of the data instead of the rows.  We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
 
 \section*{Description}
 
 let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.
+
+Before these boundaries are described, note that in order to create a set of boundaries that are both more specific than the most general or more general than the most specific, we require at least one positive entry; if all we have are negative instances, we have no idea what the specific dimension values might be.  The algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
 
 In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
 
