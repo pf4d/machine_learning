@@ -11,8 +11,9 @@ import sys
 
 import matplotlib.gridspec as gridspec
 
-from time  import time
-from pylab import *
+from time       import time
+from pylab      import *
+from scipy.misc import factorial as fact
 
 mpl.rcParams['font.family']     = 'serif'
 mpl.rcParams['legend.fontsize'] = 'medium'
@@ -147,6 +148,122 @@ def k_cross_validate(k, data, classify_ftn, classes):
   return result
 
 
+def cartesian(arrays, out=None):
+    """
+    Source: http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-
+            array-of-all-combinations-of-two-arrays
+    
+    Generate a cartesian product of input arrays.
+
+    Parameters
+    ----------
+    arrays : list of array-like
+        1-D arrays to form the cartesian product of.
+    out : ndarray
+        Array to place the cartesian product in.
+
+    Returns
+    -------
+    out : ndarray
+        2-D array of shape (M, len(arrays)) containing cartesian products
+        formed of input arrays.
+
+    Examples
+    --------
+    >>> cartesian(([1, 2, 3], [4, 5], [6, 7]))
+    array([[1, 4, 6],
+           [1, 4, 7],
+           [1, 5, 6],
+           [1, 5, 7],
+           [2, 4, 6],
+           [2, 4, 7],
+           [2, 5, 6],
+           [2, 5, 7],
+           [3, 4, 6],
+           [3, 4, 7],
+           [3, 5, 6],
+           [3, 5, 7]])
+
+    """
+
+    arrays = [np.asarray(x) for x in arrays]
+    dtype = arrays[0].dtype
+
+    n = np.prod([x.size for x in arrays])
+    if out is None:
+        out = np.zeros([n, len(arrays)], dtype=dtype)
+
+    m = n / arrays[0].size
+    out[:,0] = np.repeat(arrays[0], m)
+    if arrays[1:]:
+        cartesian(arrays[1:], out=out[0:m,1:])
+        for j in xrange(1, arrays[0].size):
+            out[j*m:(j+1)*m,1:] = out[0:m,1:]
+    return out
+
+
+def K2(attrib, max_parents, data):
+  """
+  """
+  n = len(attrib)
+  for i,a in zip(attrib, range(1,n+1)):
+    predi = []
+    Pold  = g(i, predi, data)
+    proc  = True
+    while proc and len(predi) < max_parents:
+      f = []
+      for node in attrib.keys():
+        f.append(g(i, predi + [node], data))
+      z = argmax(f)
+      Pnew = g(i, predi + [z], data)
+      if Pnew > Pold:
+        Pold = Pnew
+        predi = predi + [z]
+      else:
+        proc = False
+    print 'Node :', attrib[i], '\tParent of', attrib[i], ':', predi
+
+
+def g(i, predi, data):
+  """
+  """
+  xi    = data[:,i]
+  Vi    = unique(xi)
+  ri    = len(Vi)
+  d     = data[:,predi]
+  m,n   = shape(d)
+
+  def calc(N_ij, phi_i, qi):
+    res   = 1
+    for j in range(qi):
+      alpha_ij = array([])
+      for k in range(ri):
+        idx       = where(xi == Vi[k])
+        alpha_ijk = sum(d[idx] == phi_i[j])
+        alpha_ij  = append(alpha_ij, alpha_ijk)
+      eta = fact(ri - 1) / fact(N_ij + ri - 1) * prod(fact(alpha_ij))
+      res += eta
+    return res
+
+  if len(predi) == 0:
+    N_ij = len(data)
+    res  = calc(N_ij, data, ri)
+  
+  else:
+    unq   = []
+    for j in range(n):
+      unq.append(unique(d[:,j]))
+    phi_i = cartesian(unq)
+    qi    = len(phi_i)
+    
+    N_ij = sum(d == phi_i[j])
+    res  = calc(N_ij, phi_i, qi)
+  
+  return res
+
+
+
+
 def classify_bayes_network(test, train, classes):
   """
   Classify a set of test data <test> with corresponding training data <train> 
@@ -155,6 +272,24 @@ def classify_bayes_network(test, train, classes):
   """
   return array(V_bn)
 
+
+#===============================================================================
+# form test database :
+attrib  = {0 : 'x1', 
+           1 : 'x2',
+           2 : 'x3'} 
+D = array([[1,0,0],
+           [1,1,1],
+           [0,0,1],
+           [1,1,1],
+           [0,0,0],
+           [0,1,1],
+           [1,1,1],
+           [0,0,0],
+           [1,1,1],
+           [0,0,0]])
+
+K2(attrib, 2, D)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
