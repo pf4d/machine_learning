@@ -204,15 +204,18 @@ def cartesian(arrays, out=None):
     return out
 
 
-def K2(attrib, max_parents, data):
+def K2(nodes, attrib, max_parents, data):
   """
   """
-  n = len(attrib)
-  for i,a in zip(attrib, range(1,n+1)):
+  n     = len(nodes)
+  par_a = []
+
+  for i,a in zip(nodes, range(1,n+1)):
     par_i = array([], 'int')
     Pold  = g(i, par_i, data)
     proc  = True
-    predi = attrib[:i]
+    predi = nodes[:i]
+    
     while proc and len(par_i) < max_parents:
       seti = setdiff1d(predi, par_i)
       f    = []
@@ -228,7 +231,13 @@ def K2(attrib, max_parents, data):
         par_i = append(par_i, z)
       else:
         proc = False
-    print 'Node :', attrib[i], '\tParent of', attrib[i], ':', par_i
+      parents = []
+      for p in par_i:
+        parents.append(attrib[p])
+    par_a.append(par_i)
+    print 'Node :', attrib[i], '\tParent of', attrib[i], ':', parents
+
+  return array(par_a)
 
 
 def g(i, par_i, data):
@@ -276,6 +285,38 @@ def classify_bayes_network(test, train, classes):
   and dictionary of two possible classes <classes>.  The positive index of 
   <classes> is 1, while the negative index is 0.
   """
+  network = K2([0,1,2], attrib, 2, D)
+  
+  V_ce = []                                              # classified classes
+  # iterate through each test instance and classify :
+  for t in test:
+  
+  return array(V_ce)
+
+def k_cross_validate(k, data, classify_ftn, classes): 
+  """
+  Perform <k> crossvalidation on data <data> with classification function
+  <classify_ftn> and possible classes dictionary <classes>.
+  """
+  n   = shape(data)[0]         # number of samples
+  k   = 10                     # number of cross-validations
+  idx = range(n)               # array of indices
+  shuffle(idx)                 # randomize indices
+  
+  d   = split(data[idx], k)    # partition the shuffled data into k units
+  
+  # iterate through each partition and determine the results :
+  result = []                  # final result array
+  for i in range(k):
+    test  = d[i][:,:-1]                           # test values
+    testc = d[i][:,-1]                            # test classes
+    train = vstack(d[0:i] + d[i+1:])              # training set
+   
+    V_ce = classify_ftn(test, train, classes)     # classify
+     
+    correct = sum(testc == V_ce)                  # number correct
+    result.append(correct/float(len(testc)))      # append percentange
+  
   return array(V_bn)
 
 
@@ -295,7 +336,7 @@ D = array([[1,0,0],
            [1,1,1],
            [0,0,0]])
 
-K2([0,1,2], 2, D)
+network = K2([0,1,2], attrib, 2, D)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
