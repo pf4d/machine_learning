@@ -207,47 +207,45 @@ def K2(attrib, max_parents, data):
   """
   n = len(attrib)
   for i,a in zip(attrib, range(1,n+1)):
-    predi = []
-    Pold  = g(i, predi, data)
+    par_i = array([], 'int')
+    Pold  = g(i, par_i, data)
     proc  = True
-    while proc and len(predi) < max_parents:
-      f = []
-      for node in attrib.keys():
-        f.append(g(i, predi + [node], data))
-      z = argmax(f)
-      Pnew = g(i, predi + [z], data)
+    predi = attrib[:i]
+    while proc and len(par_i) < max_parents:
+      seti = setdiff1d(predi, par_i)
+      f    = []
+      for s in seti:
+        f.append(g(i, append(par_i, s), data))
+      if len(seti) == 0:
+        z  = array([], 'int')
+      else:
+        z  = seti[argmax(f)]
+      Pnew = g(i, append(par_i, z), data)
       if Pnew > Pold:
-        Pold = Pnew
-        predi = predi + [z]
+        Pold  = Pnew
+        par_i = append(par_i, z)
       else:
         proc = False
-    print 'Node :', attrib[i], '\tParent of', attrib[i], ':', predi
+    print 'Node :', attrib[i], '\tParent of', attrib[i], ':', par_i
 
 
-def g(i, predi, data):
+def g(i, par_i, data):
   """
   """
   xi    = data[:,i]
   Vi    = unique(xi)
   ri    = len(Vi)
-  d     = data[:,predi]
+  d     = data[:,par_i]
   m,n   = shape(d)
+  z     = len(par_i)
 
-  def calc(N_ij, phi_i, qi):
-    res   = 1
-    for j in range(qi):
-      alpha_ij = array([])
-      for k in range(ri):
-        idx       = where(xi == Vi[k])
-        alpha_ijk = sum(d[idx] == phi_i[j])
-        alpha_ij  = append(alpha_ij, alpha_ijk)
-      eta = fact(ri - 1) / fact(N_ij + ri - 1) * prod(fact(alpha_ij))
-      res += eta
-    return res
-
-  if len(predi) == 0:
-    N_ij = len(data)
-    res  = calc(N_ij, data, ri)
+  if z == 0:
+    N_ij     = len(data)
+    alpha_i_ = array([])
+    for k in range(ri):
+      alpha_i_k = sum(xi == Vi[k])
+      alpha_i_  = append(alpha_i_, alpha_i_k)
+    res = fact(ri - 1) / fact(N_ij + ri - 1) * prod(fact(alpha_i_))
   
   else:
     unq   = []
@@ -256,12 +254,18 @@ def g(i, predi, data):
     phi_i = cartesian(unq)
     qi    = len(phi_i)
     
-    N_ij = sum(d == phi_i[j])
-    res  = calc(N_ij, phi_i, qi)
+    res   = 1
+    for j in range(qi):
+      N_ij     = sum(d == phi_i[j])
+      alpha_ij = array([])
+      for k in range(ri):
+        idx       = where(xi == Vi[k])
+        alpha_ijk = sum(d[idx] == phi_i[j])
+        alpha_ij  = append(alpha_ij, alpha_ijk)
+      eta  = fact(ri - 1) / fact(N_ij + ri - 1) * prod(fact(alpha_ij))
+      res *= eta
   
   return res
-
-
 
 
 def classify_bayes_network(test, train, classes):
@@ -289,7 +293,7 @@ D = array([[1,0,0],
            [1,1,1],
            [0,0,0]])
 
-K2(attrib, 2, D)
+K2([0,1,2], 2, D)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
