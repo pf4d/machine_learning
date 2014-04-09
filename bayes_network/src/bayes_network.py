@@ -46,6 +46,7 @@ def get_normal(x, mu, sigma):
   """
   return 1/(sigma * sqrt(2 * pi)) * exp(-(x - mu)**2 / (2* sigma**2))
 
+
 def plot_dist(train, nbins, name, rows, cols, plot_normal=False, 
               log=False, norm=True):
   """
@@ -99,6 +100,7 @@ def plot_dist(train, nbins, name, rows, cols, plot_normal=False,
   savefig('../doc/images/' + name, dpi=300)
   show()
   return mus, sigs
+
 
 def plot_results(test_class, v, name, label=None):
   """
