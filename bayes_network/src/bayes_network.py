@@ -279,21 +279,35 @@ def g(i, par_i, data):
   return res
 
 
-def classify_bayes_network(test, train, classes):
+def classify_bayes_network(test, train, classes, params):
   """
   Classify a set of test data <test> with corresponding training data <train> 
   and dictionary of two possible classes <classes>.  The positive index of 
   <classes> is 1, while the negative index is 0.
   """
-  network = K2([0,1,2], attrib, 2, D)
+  attrib  = params[0]
+  max_par = params[1]
+
+  nodes   = sort(attrib.keys())
+  network = K2(nodes, attrib, max_par, train)
+  n       = len(train) + 1
   
   V_ce = []                                              # classified classes
   # iterate through each test instance and classify :
-  for t in test:
-  
+  for t, par in zip(test, network):
+    res = 1
+    if len(par) == 0:
+      votes = []
+      for c in classes.keys():
+        cnt = sum(train[:,-1] == c)
+        votes.append(cnt)
+      vi = argmax(votes)
+    else:
+      pass
+    V_ce.append(vi)
   return array(V_ce)
 
-def k_cross_validate(k, data, classify_ftn, classes): 
+def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None): 
   """
   Perform <k> crossvalidation on data <data> with classification function
   <classify_ftn> and possible classes dictionary <classes>.
@@ -312,7 +326,7 @@ def k_cross_validate(k, data, classify_ftn, classes):
     testc = d[i][:,-1]                            # test classes
     train = vstack(d[0:i] + d[i+1:])              # training set
    
-    V_ce = classify_ftn(test, train, classes)     # classify
+    V_ce = classify_ftn(test, train, classes, ftn_params)     # classify
      
     correct = sum(testc == V_ce)                  # number correct
     result.append(correct/float(len(testc)))      # append percentange
@@ -341,8 +355,10 @@ network = K2([0,1,2], attrib, 2, D)
 #===============================================================================
 # perform classification with k-fold cross-validation :
 
-k      = 10
-#result = k_cross_validate(k, data, classify_cand_elim, classes) 
+k       = 10
+max_par = 2
+params  = [attrib, max_par]
+#result = k_cross_validate(k, data, classify_cand_elim, classes, params) 
 
 #print "percent correct: %.1f%%" % (100*average(result))
 
