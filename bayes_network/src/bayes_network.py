@@ -123,33 +123,6 @@ def plot_results(test_class, v, name, label=None):
   show()
 
 
-def k_cross_validate(k, data, classify_ftn, classes): 
-  """
-  Perform <k> crossvalidation on data <data> with classification function
-  <classify_ftn> and possible classes dictionary <classes>.
-  """
-  n   = shape(data)[0]         # number of samples
-  k   = 10                     # number of cross-validations
-  idx = range(n)               # array of indices
-  shuffle(idx)                 # randomize indices
-  
-  d   = split(data[idx], k)    # partition the shuffled data into k units
-  
-  # iterate through each partition and determine the results :
-  result = []                  # final result array
-  for i in range(k):
-    test  = d[i][:,:-1]                           # test values
-    testc = d[i][:,-1]                            # test classes
-    train = vstack(d[0:i] + d[i+1:])              # training set
-   
-    V_ce = classify_ftn(test, train, classes)     # classify
-     
-    correct = sum(testc == V_ce)                  # number correct
-    result.append(correct/float(len(testc)))      # append percentange
-  
-  return result
-
-
 def cartesian(arrays, out=None):
     """
     Source: http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-
@@ -204,7 +177,7 @@ def cartesian(arrays, out=None):
     return out
 
 
-def K2(nodes, attrib, max_parents, data):
+def K2(nodes, attrib, max_parents, data, g_ftn):
   """
   """
   n     = len(nodes)
@@ -212,7 +185,7 @@ def K2(nodes, attrib, max_parents, data):
 
   for i,a in zip(nodes, range(1,n+1)):
     par_i = array([], 'int')
-    Pold  = g(i, par_i, data)
+    Pold  = g_ftn(i, par_i, data)
     proc  = True
     predi = nodes[:i]
     
@@ -220,12 +193,12 @@ def K2(nodes, attrib, max_parents, data):
       seti = setdiff1d(predi, par_i)
       f    = []
       for s in seti:
-        f.append(g(i, append(par_i, s), data))
+        f.append(g_ftn(i, append(par_i, s), data))
       if len(seti) == 0:
         z  = array([], 'int')
       else:
         z  = seti[argmax(f)]
-      Pnew = g(i, append(par_i, z), data)
+      Pnew = g_ftn(i, append(par_i, z), data)
       if Pnew > Pold:
         Pold  = Pnew
         par_i = append(par_i, z)
@@ -279,6 +252,63 @@ def g(i, par_i, data):
   return res
 
 
+def logFact(n):
+  """
+  take the log factorial of a numpy array or integer <n>.
+  """
+  if type(n) == ndarray:
+    res = []
+    for i in n:
+      res.append(sum(log(arange(1,i+1))))
+  elif type(n) == int64 or type(n) == int:
+    if n == 0:
+      res = 0
+    else:
+      res = sum(log(arange(1,n+1)))
+  else:
+    print type(n), "NOT SUPPORTED BY LOGFACT"
+  return res
+
+
+def log_g(i, par_i, data):
+  """
+  """
+  xi    = data[:,i]
+  Vi    = unique(xi)
+  ri    = len(Vi)
+  d     = data[:,par_i]
+  m,n   = shape(d)
+  z     = len(par_i)
+
+  if z == 0:
+    N_ij     = len(data)
+    alpha_i_ = array([])
+    for k in range(ri):
+      alpha_i_k = sum(xi == Vi[k])
+      alpha_i_  = append(alpha_i_, alpha_i_k)
+    res = logFact(ri - 1) - logFact(N_ij + ri - 1) + sum(logFact(alpha_i_))
+  
+  else:
+    unq   = []
+    for j in range(n):
+      unq.append(unique(d[:,j]))
+    phi_i = cartesian(unq)
+    qi    = len(phi_i)
+    
+    res   = 1
+    for j in range(qi):
+      N_ij     = sum(d == phi_i[j])
+      alpha_ij = array([])
+      for k in range(ri):
+        idx       = where(xi == Vi[k])
+        alpha_ijk = sum(d[idx] == phi_i[j])
+        alpha_ij  = append(alpha_ij, alpha_ijk)
+      eta  = logFact(ri - 1) - logFact(N_ij + ri - 1) + sum(logFact(alpha_ij))
+      res += eta
+  
+  return res
+
+
 def classify_bayes_network(test, train, classes, params):
   """
   Classify a set of test data <test> with corresponding training data <train> 
@@ -287,25 +317,35 @@ def classify_bayes_network(test, train, classes, params):
   """
   attrib  = params[0]
   max_par = params[1]
+  g_ftn   = params[2]
 
   nodes   = sort(attrib.keys())
-  network = K2(nodes, attrib, max_par, train)
+  network = K2(nodes, attrib, max_par, train, g_ftn)
   n       = len(train) + 1
   
-  V_ce = []                                              # classified classes
+  V_bn = []                                       # classified classes
   # iterate through each test instance and classify :
-  for t, par in zip(test, network):
-    res = 1
-    if len(par) == 0:
-      votes = []
-      for c in classes.keys():
-        cnt = sum(train[:,-1] == c)
-        votes.append(cnt)
-      vi = argmax(votes)
-    else:
-      pass
-    V_ce.append(vi)
-  return array(V_ce)
+  for t in test:
+    for i,xi in enumerate(t):
+      pars = network[i]
+      if len(pars) == 0:
+        votes = []
+        for c in classes.keys():
+          cnt = sum(train[:,-1] == c)
+          votes.append(cnt)
+        vi = argmax(votes)
+      else:
+        votes = []
+        for c in classes.keys():
+          d = train.copy()
+          for p in pars:
+            idx = where(d[:,p] == c)
+            d   = d[idx]
+          votes.append(len(d))
+        vi = argmax(votes)
+    V_bn.append(vi)
+  return array(V_bn)
+
 
 def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None): 
   """
@@ -326,19 +366,19 @@ def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None):
     testc = d[i][:,-1]                            # test classes
     train = vstack(d[0:i] + d[i+1:])              # training set
    
-    V_ce = classify_ftn(test, train, classes, ftn_params)     # classify
+    V_c = classify_ftn(test, train, classes, ftn_params)     # classify
      
-    correct = sum(testc == V_ce)                  # number correct
+    correct = sum(testc == V_c)                   # number correct
     result.append(correct/float(len(testc)))      # append percentange
   
-  return array(V_bn)
+  return array(result)
 
 
 #===============================================================================
 # form test database :
-attrib  = {0 : 'x1', 
-           1 : 'x2',
-           2 : 'x3'} 
+attrib_n  = {0 : 'x1', 
+             1 : 'x2',
+             2 : 'x3'} 
 D = array([[1,0,0],
            [1,1,1],
            [0,0,1],
@@ -350,17 +390,21 @@ D = array([[1,0,0],
            [1,1,1],
            [0,0,0]])
 
-network = K2([0,1,2], attrib, 2, D)
+nodes   = sort(attrib_n.keys())
+max_par = inf
+g_ftn   = log_g
+network = K2(nodes, attrib_n, max_par, D, g_ftn)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
 
 k       = 10
-max_par = 2
-params  = [attrib, max_par]
-#result = k_cross_validate(k, data, classify_cand_elim, classes, params) 
+max_par = inf
+g_ftn   = log_g
+params  = [attrib, max_par, log_g]
+result  = k_cross_validate(k, data, classify_bayes_network, classes, params) 
 
-#print "percent correct: %.1f%%" % (100*average(result))
+print "percent correct: %.1f%%" % (100*average(result))
 
 
 
