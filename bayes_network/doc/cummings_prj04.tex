@@ -1,7 +1,7 @@
 \input{functions.tex}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
-\usepackage[top=1in, bottom=1in, left=.75in, right=.75in]{geometry}
+\usepackage[top=.5in, bottom=1in, left=.75in, right=.75in]{geometry}
 \usepackage{framed}
 \definecolor{shadecolor}{gray}{0.9}
 \setlength{\columnsep}{8mm}
@@ -84,6 +84,8 @@ percent correct: 99.3%
 \end{alltt}
 \small
 \end{shaded}
+
+The first three lines give a test-network, followed by the parents of each node of the resulting DAG derived from 10-fold cross-validation on the forest fire data included in the \texttt{data} directory.  The final accuracy is reported on the last line.
 
 \section{Data}
 
