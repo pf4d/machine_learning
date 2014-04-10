@@ -1,10 +1,14 @@
 \input{functions.tex}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
-\usepackage[top=.5in, bottom=.5in, left=.5in, right=.5in]{geometry}
+\usepackage[top=1in, bottom=1in, left=.75in, right=.75in]{geometry}
+\usepackage{framed}
+\definecolor{shadecolor}{gray}{0.9}
+\setlength{\columnsep}{8mm}
 
 \begin{document}
 \small
+\twocolumn
 
 \title{Project 04 - Bayes Network}
 \author{Evan Cummings\\
@@ -12,148 +16,82 @@ CSCI 544 - Machine Learning}
 
 \maketitle
 
-First, Bays theorem states that
+\section{Program usage}
 
-$$ P(v_j | a_1, a_2, \ldots, a_n) = \frac{P(a_1, a_2, \ldots, a_n | v_j) P(v_j)}{P(a_1,a_2,\ldots,a_n)},$$
+In the \texttt{src} folder, simply type
 
-where $a$ is the attribute, $v$ is a value, $j = 1,2,\ldots,m$ is the number of different values for $m$ observations, and $n$ is the number of attributes.  If we assume conditional independence of the attribute values given the target value, we can say that $P(a_1, a_2, \ldots, a_n | v_j) = \prod_i P(a_i | v_j)$, where $i = 1,\ldots,n$.  Using this assumption, we can more easily estimate the class for which element $v_j$ belongs via the Naive Bayes classifier:
+\centerline{\texttt{python bayes\_network.py}}
 
-\begin{align}
-  v_{NB} = \argmax_{v_j \in V}\left\{ P(v_j) \prod_i P(a_i | v_j) \right\},
-\end{align}
+\noindent which results in the output
 
-where $v_{NB}$ denotes the target value output by the naive Bayes classifier.  The probability of picking value $j$ from the total pool of $m$ observations is given by $P(v_j) = \frac{\#(v_j)}{m},$ where $\#(v_j)$ is the number of elements with value $v_j$.
+\begin{shaded}
+\scriptsize
+\begin{alltt}
+Node : x1   Parent of x1 : []
+Node : x2   Parent of x2 : ['x1']
+Node : x3   Parent of x3 : ['x2']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Thunder  Parent of Thunder : ['Lightning']
+percent correct: 99.3%
+\end{alltt}
+\small
+\end{shaded}
 
-If we have a set of $m$ observations for each of the attributes $a_i$, $i = 1,2,\ldots,n$, we might try to find an appropriate distribution and model the probabilities from this distribution.  In doing this, we could calculate the $P(a_i | v_j)$ values by simply calculating the specific value on the distribution curve where this value occurs.  For example, if the data are distributed normally, we would plug this value $v$ into the function
-
-$$f(v,\mu, \sigma) = \frac{1}{\sigma \sqrt{2\pi}} \exp\left( -\frac{(v-\mu)^2}{2\sigma^2} \right),$$
-
-where $\mu$ is the mean of the data and $\sigma$ is the standard deviation.  However, if we simplify further and simply use the binned data, we can eliminate any distribution requirements and simply use the data itself to classify new values.  Using this method requires either the same number of observations for each value, or normalization of the bins such that the sum of all the areas of each bin's rectangle is equal to one and $P(v_j) = P(v_i)$ for all $i,j \in [1,m]$.  i.e., the data are represented by a probability mass function:
-
-\begin{align*}
-  \int_v f(v,\mu,\sigma) dv &= 1, && \text{continuous distribution} \\
-  \sum_n a_n &= 1, && \text{discrete data values}.
-\end{align*}
-
-To better illustrate the problem, I have run Naive Bayes classification on the fruit data set provided for this project along with a newly created data set with an order of magnitude lower number of observations for one fruit.
-
-\newpage
-
-\begin{multicols}{2}
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/not_normed_original.png}
-  \caption{\scriptsize The original data set provided for the project without normalization.  Note that the number of observations for each different fruit are about the same.  The results of Naive Bayes classification are shown below, where the absolute value of the difference between the actual fruit type $v, v_j \in [1,2,3,4]$ is taken from the predicted fruit type.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/not_normed_original_results.png}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/normed_original.png}
-  \caption{\scriptsize The original data set with normalization performed.  Notice below the results are about the same.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/normed_original_results.png}
-\end{figure}
-
-\end{multicols}
-\begin{multicols}{2}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/not_normed_new.png}
-  \caption{\scriptsize A new data set with the same $\mu$ and $\sigma$ values as the original data, but with 10,000 observations for each fruit except lemons which have 1,000.  Notice that there are a great many 4's (lemons) in the below results which were improperly classified.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/not_normed_new_results.png}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/normed_new.png}
-  \caption{\scriptsize The same data set as in Figure 3 but with the data normalized.  Note that the results are about the same as Figure 3.  However, if we adjust $P(v_j)$ in Equation (1) to be equal for all $j$, similar results to the parametric approach may be obtained.  See Figure (5).}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.4\textwidth]{images/normed_new_results.png}
-\end{figure}
-
-\end{multicols}
-
-\newpage
+\section{Data}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=1.0\textwidth]{images/normed_new_results_fixed_prob.png}
-  \caption{\scriptsize Results for the N.B.\ classification with adjusted $P(v_j)$ in Equation (1) to be equal for all $j$.  Note the vast improvement from Figure (4).}
+		\includegraphics[width=0.4\textwidth]{images/data.png}
+  \caption{The data for the project, separated by dimension.  Note that there are far more negative (0) entries than positive (1) in all dimensions.}
 \end{figure}
-
-An $m$-estimation scheme has also been utilized for the binned data probabilities.  This converts the probabilities into
-
-$$P(a_i | v_j) = \frac{n_{v_i} + mp}{n + m},$$
-
-where $n_{v_i}$ is the number values with attribute $a_i$, $n$ is the total number of values observed with attribute $a_i$, $m$ is the size of the training set, and $p=1/m$.  This scheme removes difficulties which arise when $n_c$ or $n$ is zero.  The results using non-normalized and normalized data, along with their parametric counterparts are shown below.
-
-\begin{table}[H]
-\parbox{.45\linewidth}
-{
-  \centering
-  \begin{tabular}{ c | c c c }
-    bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
-    \hline
-    10  & 93 & 92 & 97 \\
-    20  & 91 & 93 & 97 \\
-    50  & 88 & 89 & 97 \\
-    100 & 88 & 92 & 97 \\
-  \end{tabular}
-  \caption{Results for the original data set.}
-  \label{tbl:tablelabel}
-}
-\hfill
-\parbox{.45\linewidth}
-{
-  \centering
-  \begin{tabular}{ c | c c c }
-    bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
-    \hline
-    10  & 75 & 80 & 98 \\
-    20  & 73 & 82 & 97 \\
-    50  & 74 & 81 & 99 \\
-    100 & 75 & 81 & 98 \\
-  \end{tabular}
-  \caption{Results for the new data set.}
-  \label{tbl:tablelabel}
-}
-\end{table}
-
-\begin{table}[H] 
-\centering
-\begin{tabular}{ c | c c c }
-  bin size & \specialcell{non-\\normal'd} & normal'd & param. \\
-  \hline
-  10  & 76 & 89 & 98 \\
-  20  & 75 & 93 & 99 \\
-  50  & 73 & 91 & 97 \\
-  100 & 72 & 91 & 99 \\
-\end{tabular}
-\caption{Results for the new data set with $P(v_j) = P(v_i)$.}
-\label{tbl:tablelabel}
-\end{table}
-
-\subsection*{Discussion}
-
-Table (2) shows that even with the normalization, the accuracy is still less than the parametrized estimate.  This is due to the fact that the value $P(v_j)$ in Equation (1) down-weights the values with low numbers of observations.  See Figure (5) and Table (3) for the results with $P(v_j) = P(v_i)\ \forall\ i,j \in [1,m]$.
-
-Please note that if this is worth publishing, the results with probabilities not adjusted would not be provided.  This has been included as part of the development process.
  
 
 \end{document}
