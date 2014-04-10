@@ -213,9 +213,10 @@ def K2(nodes, attrib, max_parents, data, g_ftn):
         par_i = append(par_i, z)                     # add new parent to par_i
       else:
         proc = False                                 # no longer proceed
-      parents = []                                   # form parents array 
-      for p in par_i:
-        parents.append(attrib[p])
+    
+    parents = []                                     # form parents array 
+    for p in par_i:
+      parents.append(attrib[p])
     par_a.append(par_i)                              # add par_i to par_a
     print 'Node :', attrib[i], '\tParent of', attrib[i], ':', parents
 
@@ -254,11 +255,11 @@ def g(i, par_i, data):
     
     res   = 1
     for j in range(qi):
-      N_ij     = sum(d == phi_i[j])
+      N_ij     = sum((d == phi_i[j]).all(axis=1))
       alpha_ij = array([])
       for k in range(ri):
         idx       = where(xi == Vi[k])
-        alpha_ijk = sum(d[idx] == phi_i[j])
+        alpha_ijk = sum((d[idx] == phi_i[j]).all(axis=1))
         alpha_ij  = append(alpha_ij, alpha_ijk)
       eta  = fact(ri - 1) / fact(N_ij + ri - 1) * prod(fact(alpha_ij))
       res *= eta
@@ -315,13 +316,13 @@ def log_g(i, par_i, data):
     phi_i = cartesian(unq)          # form the cross product of parental values
     qi    = len(phi_i)              # number of possible parental combinations
     
-    res   = 1
+    res   = 0
     for j in range(qi):
-      N_ij     = sum(d == phi_i[j])
-      alpha_ij = array([])
+      N_ij     = sum((d == phi_i[j]).all(axis=1))
+      alpha_ij = array([])          # array of alpha_ijk's
       for k in range(ri):
         idx       = where(xi == Vi[k])
-        alpha_ijk = sum(d[idx] == phi_i[j])
+        alpha_ijk = sum((d[idx] == phi_i[j]).all(axis=1))
         alpha_ij  = append(alpha_ij, alpha_ijk)
       eta  = logFact(ri - 1) - logFact(N_ij + ri - 1) + sum(logFact(alpha_ij))
       res += eta
@@ -387,6 +388,8 @@ def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None):
   # iterate through each partition and determine the results :
   result = []                  # final result array
   for i in range(k):
+    print "\nFOLD %i" % (i+1)
+    print "-----------------------------------------------------------"
     test  = d[i][:,:-1]                           # test values
     testc = d[i][:,-1]                            # test classes
     train = vstack(d[0:i] + d[i+1:])              # training set
@@ -415,10 +418,9 @@ D = array([[1,0,0],
            [1,1,1],
            [0,0,0]])
 
-nodes   = sort(attrib_n.keys())
 max_par = inf
-g_ftn   = log_g
-network = K2(nodes, attrib_n, max_par, D, g_ftn)
+#network = K2(sort(attrib_n.keys()), attrib_n, max_par, D, g)
+#network = K2(sort(attrib.keys()), attrib, max_par, data, log_g)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
@@ -429,7 +431,7 @@ g_ftn   = log_g
 params  = [attrib, max_par, log_g]
 result  = k_cross_validate(k, data, classify_bayes_network, classes, params) 
 
-print "percent correct: %.1f%%" % (100*average(result))
+print "\npercent correct: %.1f%%" % (100*average(result))
 
 
 

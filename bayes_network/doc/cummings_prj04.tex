@@ -25,74 +25,101 @@ In the \texttt{src} folder, simply type
 \noindent which results in the output
 
 \begin{shaded}
-\scriptsize
+\tiny
 \begin{alltt}
-Node : x1   Parent of x1 : []
-Node : x2   Parent of x2 : ['x1']
-Node : x3   Parent of x3 : ['x2']
+FOLD 1
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 2
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 3
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 4
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 5
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 6
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 7
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 8
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 9
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 10
+-----------------------------------------------------------
 Node : Storms   Parent of Storms : []
 Node : BusTourGroup   Parent of BusTourGroup : []
 Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
 Node : Thunder  Parent of Thunder : ['Lightning']
+
 percent correct: 99.3%
 \end{alltt}
 \small
 \end{shaded}
 
-The first three lines give a test-network, followed by the parents of each node of the resulting DAG derived from 10-fold cross-validation on the forest fire data included in the \texttt{data} directory.  The final accuracy is reported on the last line.
+This shows the parents of each node of the resulting DAG derived from 10-fold cross-validation on the forest fire data included in the \texttt{data} directory.  The final accuracy is reported on the last line.
 
 \section{Data}
 
 \begin{figure}[H]
   \centering
 		\includegraphics[width=0.4\textwidth]{images/data.png}
-  \caption{The data for the project, separated by dimension.  Note that there are far more negative (0) entries than positive (1) in all dimensions.}
+  \caption{\scriptsize The data for the project, separated by dimension.  Note that there are far more negative (0) entries than positive (1) in all dimensions.}
 \end{figure}
  
 
