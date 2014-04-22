@@ -1,0 +1,130 @@
+\input{functions.tex}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\usepackage[top=.5in, bottom=1in, left=.75in, right=.75in]{geometry}
+\usepackage{framed}
+\definecolor{shadecolor}{gray}{0.9}
+\setlength{\columnsep}{8mm}
+
+\begin{document}
+\small
+\twocolumn
+
+\title{Project 06 - Neural Network}
+\author{Evan Cummings\\
+CSCI 544 - Machine Learning}
+
+\maketitle
+
+\section{Program usage}
+
+In the \texttt{src} folder, simply type
+
+\centerline{\texttt{python bayes\_network.py}}
+
+\noindent which results in the output
+
+\begin{shaded}
+\tiny
+\begin{alltt}
+FOLD 1
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 2
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 3
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 4
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 5
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 6
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 7
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 8
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 9
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+FOLD 10
+-----------------------------------------------------------
+Node : Storms   Parent of Storms : []
+Node : BusTourGroup   Parent of BusTourGroup : []
+Node : Lightning  Parent of Lightning : ['Storms']
+Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
+Node : Thunder  Parent of Thunder : ['Lightning']
+
+percent correct: 99.3%
+\end{alltt}
+\small
+\end{shaded}
+
+This shows the parents of each node of the resulting DAG derived from 10-fold cross-validation on the forest fire data included in the \texttt{data} directory.  The final accuracy is reported on the last line.
+
+\section{Data}
+
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=0.4\textwidth]{images/data.png}
+  \caption{\scriptsize The data for the project, separated by dimension.  Note that there are far more negative (0) entries than positive (1) in all dimensions.}
+\end{figure}
+ 
+
+\end{document}
+
+
+
+
