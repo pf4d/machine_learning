@@ -132,9 +132,11 @@ class NeuralNetwork(object):
     self.train     = train[:,:-1]           # training data
     self.train_c   = train[:,-1]            # training class
     self.classes   = unique(self.train_c)   # possible classes
+    self.classes   = sort(self.classes)     # sort the classes
     self.trans_ftn = trans_ftn              # array of layer trans. ftns.
     self.eta       = eta                    # array of layer relaxation params.
     self.n_neurons = n_neurons              # array of layer num. of neurons
+    self.nlayers   = len(n_neurons)         # number of layers
     self.n,self.m  = shape(self.train)      # num. of training data / dim's
     
     # create leyers and network structure : 
@@ -150,7 +152,7 @@ class NeuralNetwork(object):
       # create layer and add the layer to the network :
       layer = []
       for j in range(n):
-        layer.append(Neuron(i,j,w,t,e))
+        layer.append(Neuron(w,t,e))
       network.append(array(layer))
     self.network = array(network)
 
@@ -164,37 +166,47 @@ class NeuralNetwork(object):
         x = array([])
         for n in self.network[i-1]:
           x = append(x, n.out)
-        print i,x
       for n in layer:
         n.calc_output(x)
 
-  def calcErrors(self, val):
+  def calcErrors(self, t):
     """
     """
-    for i,ni in enumerate(self.network[::-1]):
-      if i == 0:
-        delta_i = o*(1 - o)*(val - o)
-      else:
-        delta_k = delta_i[-1]
-        for j, oj in enumerate(o):
-          w = []
-          for nk in nj:
-            w.append(nk.w[j+1])
-          w = array(w)
-          delta_j = oj*(1 - oj)*dot(w, delta_k)
-        delta_i.append(delta_j)
-      delta_ij.append(array(delta_i))
-    self.delta_ij = array(delta_ij)
+    for i,layer in enumerate(self.network[::-1]):
+      for j,nj in enumerate(layer):
+        if i == 0:
+          nj.calc_delta(t, False)
+        else:
+          deltaDotw = 0
+          for nk in self.network[::-1][i-1]:
+            deltaDotw += nk.delta * nk.w[j+1]
+          nj.calc_delta(deltaDotw, True)
 
+  def calcDeltaW(self, val):
+    """
+    """
+    for i,layer in enumerate(self.network):
+      for j,nj in enumerate(layer):
+        if i == 0:
+          nj.calc_delta_w(val)
+        else:
+          t = []
+          for nk in self.network[::-1][i-1]:
+            t.append(nk.out)
+          nj.calc_delta_w(array(t))
+  
+  def backProp(self):
+    """
+    """
+    for x,t in zip(self.train, self.train_c):
+      pass
 
 
 class Neuron(object):
 
-  def __init__(self, idl, idn, n, trans_ftn, eta):
+  def __init__(self, n, trans_ftn, eta):
     """
     """
-    self.idl       = idl           # layer id
-    self.idn       = idn           # id number
     self.n         = n             # number of inputs
     self.trans_ftn = trans_ftn     # transfer function
     self.eta       = eta           # relaxation parameter
@@ -204,8 +216,7 @@ class Neuron(object):
     """
     Initialize n+1 weights from [-0.05, 0.05].
     """
-    #self.w = 0.10*random(self.n+1) - 0.05
-    self.w = 0.05*ones(self.n+1)
+    self.w = 0.10*random(self.n+1) - 0.05
 
   def calc_output(self, val):
     """
@@ -213,6 +224,21 @@ class Neuron(object):
     vec    = append(1.0, val)
     output = dot(self.w, vec)
     self.out = self.trans_ftn(output)
+
+  def calc_delta(self, val, hidden):
+    """
+    """
+    o = self.out
+    if not hidden:
+      self.delta = o*(1 - o)*(val - o)
+    else:
+      self.delta = o*(1 - o)*val
+
+  def calc_delta_w(self, val):
+    """
+    """
+    self.delta_w  = self.eta * self.delta * append(0, val)
+    self.w       += self.delta_w
 
 
 def classify_neural_network(test, train, classes, params):
@@ -267,6 +293,10 @@ trans_ftn = [sigmoid]*3
 eta       = [0.05]*3
 n_neurons = [3,3,3]
 network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
+val       = data[0,:-1]
+network.feedForward(val)
+network.calcErrors(0)
+network.calcDeltaW(val)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
