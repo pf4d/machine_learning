@@ -24,7 +24,7 @@ mpl.rcParams['legend.fontsize'] = 'medium'
 dirc  = '../data/'       # directory containing data
 
 # classes "lookup table" :
-classes = {1 : '1', 2 : '2', 3 : '3'}
+classes = {0 : '1', 1 : '2', 2 : '3'}
 attrib  = {0 : 'Sepal Length', 
            1 : 'Sepal Width',
            2 : 'Petal Length', 
@@ -72,8 +72,8 @@ def plot_dist(train, nbins, name, rows, cols, plot_normal=False,
     maxi  = train[:,i].max()               # max of attribute i
     ax.set_xlim([mini, maxi])
     # iterate over each class j :
-    for j in range(m):
-      wj   = where(train_class == j)[0]  # indicies for class j
+    for j,c in enumerate(vs):
+      wj   = where(train_class == c)[0]  # indicies for class j
       xj   = train[wj,i]                   # array of training values j
       muj  = mean(xj)                      # mean of class j
       sigj = std(xj)                       # standard dev of class j
@@ -124,7 +124,7 @@ def sigmoid(v):
   return 1 / (1 + exp(-v))
 
 
-class network(object):
+class NeuralNetwork(object):
   
   def __init__(self, train, trans_ftn, eta, n_neurons):
     """
@@ -141,28 +141,78 @@ class network(object):
     network   = []
     for i, (n, t, e) in enumerate(zip(n_neurons, trans_ftn, eta)):
       # number of weights == num of dimensions :
-      if i == 0: w = m
+      if i == 0:
+        w = self.m
       # num of weights == num of neurons in prev. layer :
-      else:      w = n_neurons[i-1]
+      else:
+        w = n_neurons[i-1]
       
       # create layer and add the layer to the network :
       layer = []
       for j in range(n):
-        layer.append(neuron(w,t,e))
+        layer.append(Neuron(i,j,w,t,e))
       network.append(array(layer))
     self.network = array(network)
 
-
-
-class neuron(object):
-
-  def __init__(self, n, trans_ftn, eta):
+  def feedForward(self, val):
     """
     """
-    self.n         = n                 # number of inputs
-    self.trans_ftn = trans_ftn         # transfer function
-    self.eta       = eta               # relaxation parameter
-    self.w = 0.10*random(n+1) - 0.05   # init. n+1 weights from [-0.05, 0.05]
+    for i,layer in enumerate(self.network):
+      if i==0:
+        x = val
+      else:
+        x = array([])
+        for n in self.network[i-1]:
+          x = append(x, n.out)
+        print i,x
+      for n in layer:
+        n.calc_output(x)
+
+  def calcErrors(self, val):
+    """
+    """
+    for i,ni in enumerate(self.network[::-1]):
+      if i == 0:
+        delta_i = o*(1 - o)*(val - o)
+      else:
+        delta_k = delta_i[-1]
+        for j, oj in enumerate(o):
+          w = []
+          for nk in nj:
+            w.append(nk.w[j+1])
+          w = array(w)
+          delta_j = oj*(1 - oj)*dot(w, delta_k)
+        delta_i.append(delta_j)
+      delta_ij.append(array(delta_i))
+    self.delta_ij = array(delta_ij)
+
+
+
+class Neuron(object):
+
+  def __init__(self, idl, idn, n, trans_ftn, eta):
+    """
+    """
+    self.idl       = idl           # layer id
+    self.idn       = idn           # id number
+    self.n         = n             # number of inputs
+    self.trans_ftn = trans_ftn     # transfer function
+    self.eta       = eta           # relaxation parameter
+    self.init_weights()            # init. n+1 weights from [-0.05, 0.05]
+  
+  def init_weights(self):
+    """
+    Initialize n+1 weights from [-0.05, 0.05].
+    """
+    #self.w = 0.10*random(self.n+1) - 0.05
+    self.w = 0.05*ones(self.n+1)
+
+  def calc_output(self, val):
+    """
+    """
+    vec    = append(1.0, val)
+    output = dot(self.w, vec)
+    self.out = self.trans_ftn(output)
 
 
 def classify_neural_network(test, train, classes, params):
@@ -208,7 +258,15 @@ def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None):
 
 
 #===============================================================================
+# plot the data :
+#mus, sigs = plot_dist(data, 10, 'data', 2, 2, plot_normal=True, norm=True)
+
 # form test database :
+train     = data
+trans_ftn = [sigmoid]*3
+eta       = [0.05]*3
+n_neurons = [3,3,3]
+network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
