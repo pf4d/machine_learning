@@ -120,6 +120,51 @@ def plot_results(test_class, v, name, label=None):
   savefig('../doc/images/' + name + '_results.png', dpi=300)
   show()
 
+def sigmoid(v):
+  return 1 / (1 + exp(-v))
+
+
+class network(object):
+  
+  def __init__(self, train, trans_ftn, eta, n_neurons):
+    """
+    """
+    self.train     = train[:,:-1]           # training data
+    self.train_c   = train[:,-1]            # training class
+    self.classes   = unique(self.train_c)   # possible classes
+    self.trans_ftn = trans_ftn              # array of layer trans. ftns.
+    self.eta       = eta                    # array of layer relaxation params.
+    self.n_neurons = n_neurons              # array of layer num. of neurons
+    self.n,self.m  = shape(self.train)      # num. of training data / dim's
+    
+    # create leyers and network structure : 
+    network   = []
+    for i, (n, t, e) in enumerate(zip(n_neurons, trans_ftn, eta)):
+      # number of weights == num of dimensions :
+      if i == 0: w = m
+      # num of weights == num of neurons in prev. layer :
+      else:      w = n_neurons[i-1]
+      
+      # create layer and add the layer to the network :
+      layer = []
+      for j in range(n):
+        layer.append(neuron(w,t,e))
+      network.append(array(layer))
+    self.network = array(network)
+
+
+
+class neuron(object):
+
+  def __init__(self, n, trans_ftn, eta):
+    """
+    """
+    self.n         = n                 # number of inputs
+    self.trans_ftn = trans_ftn         # transfer function
+    self.eta       = eta               # relaxation parameter
+    self.w = 0.10*random(n+1) - 0.05   # init. n+1 weights from [-0.05, 0.05]
+
+
 def classify_neural_network(test, train, classes, params):
   """
   Classify a set of test data <test> with corresponding training data <train> 
