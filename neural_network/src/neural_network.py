@@ -175,7 +175,9 @@ class NeuralNetwork(object):
     for i,layer in enumerate(self.network[::-1]):
       for j,nj in enumerate(layer):
         if i == 0:
-          nj.calc_delta(t, False)
+          if j == t: v = 1
+          else:      v = 0
+          nj.calc_delta(v, False)
         else:
           deltaDotw = 0
           for nk in self.network[::-1][i-1]:
@@ -185,6 +187,7 @@ class NeuralNetwork(object):
   def calcDeltaW(self, val):
     """
     """
+    err = array([])
     for i,layer in enumerate(self.network):
       for j,nj in enumerate(layer):
         if i == 0:
@@ -194,12 +197,42 @@ class NeuralNetwork(object):
           for nk in self.network[::-1][i-1]:
             t.append(nk.out)
           nj.calc_delta_w(array(t))
+        err = append(err, nj.delta_w)
+    return err
   
-  def backProp(self):
+  def backProp(self, mit, atol, rtol):
     """
     """
-    for x,t in zip(self.train, self.train_c):
-      pass
+    a   = inf
+    r   = inf
+    err = array([])
+    cnt = 0
+    while (a > atol and r > rtol) and cnt < mit:
+      a = array([])
+      for x,t in zip(self.train, self.train_c):
+        self.feedForward(x)
+        self.calcErrors(t)
+        nd = self.calcDeltaW(x)
+        a = append(a, nd)
+      a   = norm(a) 
+      if cnt > 0:
+        r   = abs(err[-1] - a)
+        print 'Iteration %i (max %i) done: r (abs) = %.2e (tol %.2e) ' \
+              'r (rel) = %.2e (tol = %.2e)' % (cnt, mit, a, atol, r, rtol)
+      err = append(err, a)
+      cnt += 1
+    plot(err)
+    show()
+
+  def classify(self, x):
+    """
+    """
+    self.feedForward(x)
+    vote = []
+    for n in self.network[-1]:
+      vote.append(n.out)
+    result = argmax(vote)
+    return result
 
 
 class Neuron(object):
@@ -237,8 +270,8 @@ class Neuron(object):
   def calc_delta_w(self, val):
     """
     """
-    self.delta_w  = self.eta * self.delta * append(0, val)
-    self.w       += self.delta_w
+    self.delta_w  = self.eta * self.delta * val
+    self.w       += append(0, self.delta_w)
 
 
 def classify_neural_network(test, train, classes, params):
@@ -247,11 +280,22 @@ def classify_neural_network(test, train, classes, params):
   and dictionary of two possible classes <classes>.  The positive index of 
   <classes> is 1, while the negative index is 0.
   """
-  V_bn = []                             # classified classes
+  trans_ftn = params[0]
+  eta       = params[1]
+  n_neurons = params[2]
+  mit       = params[3]
+  atol      = params[4]
+  rtol      = params[5]
+
+  network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
+  network.backProp(mit, atol, rtol)
+  
+  V_nn = []                             # classified classes
   # iterate through each test instance and classify :
   for t in test:
-    V_bn.append(vi)                           # append result
-  return array(V_bn)
+    vi = network.classify(t)            # classify single case
+    V_nn.append(vi)                     # append result
+  return array(V_nn)
 
 
 def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None): 
@@ -292,19 +336,21 @@ train     = data
 trans_ftn = [sigmoid]*3
 eta       = [0.05]*3
 n_neurons = [3,3,3]
-network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
-val       = data[0,:-1]
-network.feedForward(val)
-network.calcErrors(0)
-network.calcDeltaW(val)
+mit       = 500
+atol      = 1e-3
+rtol      = 3e-6
+params    = [trans_ftn, eta, n_neurons, mit, atol, rtol]
+
+V_nn = classify_neural_network(data[:,:-1], data, classes, params)
+result = sum(data[:,-1] == V_nn) / float(len(V_nn))
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
 
 k       = 10
-#result  = k_cross_validate(k, data, classify_neural_network, classes) 
+#result  = k_cross_validate(k, data, classify_neural_network, classes, params) 
 
-#print "\npercent correct: %.1f%%" % (100*average(result))
+print "\npercent correct: %.1f%%" % (100*average(result))
 
 
 
