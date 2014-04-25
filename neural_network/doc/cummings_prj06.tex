@@ -20,106 +20,50 @@ CSCI 544 - Machine Learning}
 
 In the \texttt{src} folder, simply type
 
-\centerline{\texttt{python bayes\_network.py}}
+\centerline{\texttt{python neural\_network.py}}
 
 \noindent which results in the output
 
 \begin{shaded}
-\tiny
+\scriptsize
 \begin{alltt}
-FOLD 1
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
+...
 
-FOLD 2
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
+Iteration 1484 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1485 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1486 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
+Iteration 1487 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
+Iteration 1488 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1489 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1490 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
+Iteration 1491 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1492 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1493 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1494 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1495 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1496 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1497 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1498 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
+Iteration 1499 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
 
-FOLD 3
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
+percent correct: 96.7%
 
-FOLD 4
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 5
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 6
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 7
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 8
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 9
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-FOLD 10
------------------------------------------------------------
-Node : Storms   Parent of Storms : []
-Node : BusTourGroup   Parent of BusTourGroup : []
-Node : Lightning  Parent of Lightning : ['Storms']
-Node : Campfire   Parent of Campfire : ['BusTourGroup', 'Storms']
-Node : Thunder  Parent of Thunder : ['Lightning']
-
-percent correct: 99.3%
 \end{alltt}
 \small
 \end{shaded}
-
-This shows the parents of each node of the resulting DAG derived from 10-fold cross-validation on the forest fire data included in the \texttt{data} directory.  The final accuracy is reported on the last line.
 
 \section{Data}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.4\textwidth]{images/data.png}
-  \caption{\scriptsize The data for the project, separated by dimension.  Note that there are far more negative (0) entries than positive (1) in all dimensions.}
+		\includegraphics[width=0.5\textwidth]{images/data.png}
+  \caption{The data for the project, normalized and separated by dimension.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+		\includegraphics[width=0.5\textwidth]{images/10-fold_results.png}
+  \caption{The percentage incorrect for each of the 10 folds.}
 \end{figure}
  
 

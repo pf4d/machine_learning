@@ -309,6 +309,9 @@ class NeuralNetwork(object):
     ylabel('percent incorrect')
     title('Errors')
     tight_layout()
+    grid()
+    leg = legend()
+    leg.get_frame().set_alpha(0.5)
     savefig(name + '.png', dpi=300)
     show()
 
@@ -402,7 +405,6 @@ def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None):
   <classify_ftn> and possible classes dictionary <classes>.
   """
   n   = shape(data)[0]         # number of samples
-  k   = 10                     # number of cross-validations
   idx = range(n)               # array of indices
   shuffle(idx)                 # randomize indices
   
@@ -444,10 +446,9 @@ params    = [network, mit, atol, rtol]
 #===============================================================================
 # perform classification with k-fold cross-validation :
 
-k       = 2
+k       = 10
 result  = k_cross_validate(k, data, classify_neural_network, classes, params) 
-name    = '10-fold_results'
-network.plot_errors(name)  # plot the error history
+network.plot_errors('10-fold_results')  # plot the error history
 
 print "\npercent correct: %.1f%%" % (100*average(result))
 
