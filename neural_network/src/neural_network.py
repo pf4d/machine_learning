@@ -128,16 +128,13 @@ class NeuralNetwork(object):
   
   def __init__(self, train, trans_ftn, eta, n_neurons):
     """
+    Create a neural network with training data <train>, transfer function 
+    array <trans_ftn>, eta array <eta>, and number of neurons in each layer 
+    array <n_neurons>.  Each of <trans_ftn>, <eta>, and <n_neurons> should be
+    the same size with corresponding values for each layer.
     """
-    self.train     = train[:,:-1]           # training data
-    self.train_c   = train[:,-1]            # training class
-    self.classes   = unique(self.train_c)   # possible classes
-    self.classes   = sort(self.classes)     # sort the classes
-    self.trans_ftn = trans_ftn              # array of layer trans. ftns.
-    self.eta       = eta                    # array of layer relaxation params.
-    self.n_neurons = n_neurons              # array of layer num. of neurons
-    self.nlayers   = len(n_neurons)         # number of layers
-    self.n,self.m  = shape(self.train)      # num. of training data / dim's
+    self.set_train(train)  # set the training data
+    self.err = []          # error histor of backpropagation calls
     
     # create leyers and network structure : 
     network   = []
@@ -156,82 +153,175 @@ class NeuralNetwork(object):
       network.append(array(layer))
     self.network = array(network)
 
+  def set_train(self, train):
+    """
+    Set the training data to array <train>.
+    """
+    if len(shape(train)) == 1:
+      self.train     = train[:-1]           # training data
+      self.train_c   = train[-1]            # training class
+      self.n         = 1                    # num. of training data
+      self.m         = len(self.train)      # num. of dimensions
+    else:
+      self.train     = train[:,:-1]         # training data
+      self.train_c   = train[:,-1]          # training class
+      self.n,self.m  = shape(self.train)    # num. of training data / dim's
+
+  def initialize(self):
+    """
+    Initialze the weights for all neurons.
+    """
+    for layer in self.network:
+      for n in layer:
+        n.init_weights()
+
   def feedForward(self, val):
     """
+    Feed forward data array <val> through the network.
     """
+    # for each layer, calculate the output :
     for i,layer in enumerate(self.network):
+      # input for 1st layer is the data <val> :
       if i==0:
         x = val
+      # input is the output of the previous layer :
       else:
         x = array([])
         for n in self.network[i-1]:
           x = append(x, n.out)
+      # calculate each neuron's output :
       for n in layer:
         n.calc_output(x)
 
   def calcErrors(self, t):
     """
+    Calculate the error for each neuron in network with target value <t>.
     """
+    # for each layer in the network, starting at the output layer :
     for i,layer in enumerate(self.network[::-1]):
+      # iterate through each layer's neurons :
       for j,nj in enumerate(layer):
+        # if the layer is the output, set the target value :
         if i == 0:
-          if j == t: v = 1
-          else:      v = 0
-          nj.calc_delta(v, False)
+          # if the output neuron is the neuron corresponding to the target :
+          if j == t-1: v = 1
+          # else it should be 0 :
+          else:        v = 0
+          nj.calc_delta(v, False)  # calc delta for neuron in non-hidden layer
+        # the neuron is hidden :
         else:
+          # calculate the sum of all weights * delta's in the next layer :
           deltaDotw = 0
           for nk in self.network[::-1][i-1]:
             deltaDotw += nk.delta * nk.w[j+1]
-          nj.calc_delta(deltaDotw, True)
+          nj.calc_delta(deltaDotw, True)  # calc delta in hidden layer
 
   def calcDeltaW(self, val):
     """
+    Calculate Delta weight for input array <val>.  Returns an array of all the 
+    Delta W values for each neuron in the network.
     """
+    # for each layer in network, calculate the Delta W :
     err = array([])
     for i,layer in enumerate(self.network):
       for j,nj in enumerate(layer):
+        # if this is the input layer, input is <val> :
         if i == 0:
           nj.calc_delta_w(val)
+        # otherwise it is the previous layer's output :
         else:
           t = []
-          for nk in self.network[::-1][i-1]:
+          for nk in self.network[i-1]:
             t.append(nk.out)
           nj.calc_delta_w(array(t))
-        err = append(err, nj.delta_w)
+        err = append(err, nj.delta_w)  # add the Delta w to array
     return err
   
-  def backProp(self, mit, atol, rtol):
+  def backProp_weight_error(self, mit, atol, rtol):
     """
+    Perform the backpropagation algorithm on the network with max number of 
+    iterations <mit>, absolute error in weight <atol>, and relative error in
+    weight <rtol>.  Error history is appended to instance's <err> array.
     """
     a   = inf
     r   = inf
     err = array([])
     cnt = 0
+    # loop until tolerance of max iterations are met :
     while (a > atol and r > rtol) and cnt < mit:
       a = array([])
+      # iterate through all the training data :
       for x,t in zip(self.train, self.train_c):
-        self.feedForward(x)
-        self.calcErrors(t)
-        nd = self.calcDeltaW(x)
-        a = append(a, nd)
-      a   = norm(a) 
+        self.feedForward(x)       # feed the data forward
+        self.calcErrors(t)        # calculate the error
+        nd = self.calcDeltaW(x)   # update the weight
+        a = append(a, nd)         # append the error
+      a = norm(a)                 # find the norm of the epoch's error
+      # print the statistics to the screen :
       if cnt > 0:
         r   = abs(err[-1] - a)
         print 'Iteration %i (max %i) done: r (abs) = %.2e (tol %.2e) ' \
               'r (rel) = %.2e (tol = %.2e)' % (cnt, mit, a, atol, r, rtol)
-      err = append(err, a)
-      cnt += 1
-    plot(err)
+      err = append(err, a)        # append the error to the array
+      cnt += 1                    # increment counter
+    self.err.append(err)          # save the error
+
+  def backProp_classify_error(self, mit, atol):
+    """
+    Perform the backpropagation algorithm on the network with max number of 
+    iterations <mit>, absolute error in classify <atol>.  Error history is 
+    appended to instance's <err> array.
+    """
+    a   = inf
+    err = array([])
+    cnt = 0
+    # loop until tolerance of max iterations are met :
+    while a > atol and cnt < mit:
+      # iterate through all the training data :
+      for x,t in zip(self.train, self.train_c):
+        self.feedForward(x)       # feed the data forward
+        self.calcErrors(t)        # calculate the error
+        nd = self.calcDeltaW(x)   # update the weight
+      a = array([])
+      # classify the training data to calc error :
+      for x in self.train: 
+        ac = self.classify(x)     # classify
+        a = append(a, ac)         # append result
+      # calculate the percent incorrect :
+      a = (self.n - sum(self.train_c == a)) / float(self.n)
+      # print the statistics to the screen :
+      if cnt > 0:
+        print 'Iteration %i (max %i) done: r (abs) = %.1f%% (tol %.1f%%) ' \
+              % (cnt, mit, a*100, atol*100)
+      err = append(err, a)        # append the error to the array )
+      cnt += 1                    # increment counter
+    self.err.append(err)          # save the error
+
+  def plot_errors(self, name):
+    """
+    Plot the error history for all backpropagation steps and save in current
+    directory with name "<name>.png."
+    """
+    name = str(name)
+    for i,err in enumerate(self.err):
+      plot(err, lw=2.0, label='fold %i' % i)
+    xlabel('Epoch')
+    ylabel('percent incorrect')
+    title('Errors')
+    tight_layout()
+    savefig(name + '.png', dpi=300)
     show()
 
   def classify(self, x):
     """
+    Classify a given data array <x> with current network.
     """
-    self.feedForward(x)
+    self.feedForward(x)           # feed the data forward
+    # tally up the votes :
     vote = []
     for n in self.network[-1]:
       vote.append(n.out)
-    result = argmax(vote)
+    result = argmax(vote) + 1     # result is the argmax + 1
     return result
 
 
@@ -239,6 +329,8 @@ class Neuron(object):
 
   def __init__(self, n, trans_ftn, eta):
     """
+    Create a single neuron with number of inputs <n>, transfer function output
+    <trans_ftn>, and learning rate <eta>.
     """
     self.n         = n             # number of inputs
     self.trans_ftn = trans_ftn     # transfer function
@@ -253,13 +345,18 @@ class Neuron(object):
 
   def calc_output(self, val):
     """
+    Calculate the output of the neuron for a given input array <val>.
     """
-    vec    = append(1.0, val)
-    output = dot(self.w, vec)
-    self.out = self.trans_ftn(output)
+    vec      = append(1.0, val)         # append one to val for the bias
+    output   = dot(self.w, vec)         # calculate the output
+    self.out = self.trans_ftn(output)   # run through the transfer ftn.
 
   def calc_delta(self, val, hidden):
     """
+    Calculate the error (delta) for the neuron. If <hidden> is True, this is
+    a hidden layer and should <val> is the sum of all weights * deltas of the 
+    next layer.  If <hidden> is False, this is an output layer and <val> is
+    just the target value (0 or 1).
     """
     o = self.out
     if not hidden:
@@ -269,9 +366,10 @@ class Neuron(object):
 
   def calc_delta_w(self, val):
     """
+    Calculate the change in delta and update the weight for input array <val>.
     """
-    self.delta_w  = self.eta * self.delta * val
-    self.w       += append(0, self.delta_w)
+    self.delta_w  = self.eta * self.delta * append(1,val)
+    self.w       += self.delta_w
 
 
 def classify_neural_network(test, train, classes, params):
@@ -280,16 +378,16 @@ def classify_neural_network(test, train, classes, params):
   and dictionary of two possible classes <classes>.  The positive index of 
   <classes> is 1, while the negative index is 0.
   """
-  trans_ftn = params[0]
-  eta       = params[1]
-  n_neurons = params[2]
-  mit       = params[3]
-  atol      = params[4]
-  rtol      = params[5]
-
-  network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
-  network.backProp(mit, atol, rtol)
+  network   = params[0]
+  mit       = params[1]
+  atol      = params[2]
+  rtol      = params[3]
   
+  #network.backProp_weight_error(mit, atol, rtol)
+  network.initialize()
+  network.set_train(train)
+  network.backProp_classify_error(mit, atol)
+   
   V_nn = []                             # classified classes
   # iterate through each test instance and classify :
   for t in test:
@@ -331,24 +429,25 @@ def k_cross_validate(k, data, classify_ftn, classes, ftn_params=None):
 # plot the data :
 #mus, sigs = plot_dist(data, 10, 'data', 2, 2, plot_normal=True, norm=True)
 
-# form test database :
+# specifiy parameters :
 train     = data
 trans_ftn = [sigmoid]*3
 eta       = [0.05]*3
 n_neurons = [3,3,3]
-mit       = 500
-atol      = 1e-3
-rtol      = 3e-6
-params    = [trans_ftn, eta, n_neurons, mit, atol, rtol]
-
-V_nn = classify_neural_network(data[:,:-1], data, classes, params)
-result = sum(data[:,-1] == V_nn) / float(len(V_nn))
+mit       = 1500
+#atol      = 1e-7 # not used
+atol      = 0.02
+rtol      = 3e-8  # not used
+network   = NeuralNetwork(train, trans_ftn, eta, n_neurons)
+params    = [network, mit, atol, rtol]
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
 
-k       = 10
-#result  = k_cross_validate(k, data, classify_neural_network, classes, params) 
+k       = 2
+result  = k_cross_validate(k, data, classify_neural_network, classes, params) 
+name    = '10-fold_results'
+network.plot_errors(name)  # plot the error history
 
 print "\npercent correct: %.1f%%" % (100*average(result))
 
