@@ -244,7 +244,6 @@ def k_cross_validate(k, data, classify_ftn, classes):
   <classify_ftn> and possible classes dictionary <classes>.
   """
   n   = shape(data)[0]         # number of samples
-  k   = 10                     # number of cross-validations
   idx = range(n)               # array of indices
   shuffle(idx)                 # randomize indices
   
