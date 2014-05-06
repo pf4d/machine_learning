@@ -31,7 +31,7 @@ attrib  = {0 : 'Weight',
 f    = open(dirc + 'items.csv', 'r')
 data = loadtxt(f, dtype='float', delimiter=",", skiprows=1)
 
-maxW = 200.0 
+W_m  = 200.0  # maximum weight
 
 #===============================================================================
 # perform classification with k-fold cross-validation :
