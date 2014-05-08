@@ -11,9 +11,9 @@ import sys
 
 import matplotlib.gridspec as gridspec
 
-from time       import time
-from pylab      import *
-from scipy.misc import factorial as fact
+from time         import time
+from pylab        import *
+from numpy.random import choice
 
 mpl.rcParams['font.family']     = 'serif'
 mpl.rcParams['legend.fontsize'] = 'medium'
@@ -79,25 +79,29 @@ def selection(v, data, w_m):
 
   
 
-def genetic_algorithm(data, w_m):
+def genetic_algorithm(data, w_m, alpha, gamma):
   """
   """
-  m,n  = shape(data)                # number of rows, columns
-  p_s  = 100                        # population size
-  pop  = randint(2, size=(p_s, m))  # generate initial population
+  m,n  = shape(data)                 # number of rows, columns
+  p_s  = 100                         # population size
+  pop  = randint(2, size=(p_s, m))   # generate initial population
 
-  child = crossover(pop)            # create children
-  pop   = vstack((pop, child))      # add the children to the population
+  child = crossover(pop)             # create children
+  pop   = vstack((pop, child))       # add the children to the population
+
+  f     = fitness(pop, data, w_m)    # calculate the fitness
+  best  = f.argsort()[-gamma:][::-1] # get indexes of gamma best
+  pop_n = pop[best]                  # keep the gamma best individuals
 
   # find survivors :
-  pop_n = []
   while len(pop_n) < p_s:
-    survivor = selection(pop_n, data, w_m)
-    pop_n.append(survivor)
-  pop_n = array(pop_n)
+    idx      = arange(len(pop))
+    tourn    = choice(idx, alpha)
+    survivor = selection(tourn, data, w_m)
+    pop_n    = vstack((pop_n, survivor))
 
 
-
+ 
 #===============================================================================
 # find solution :
 w_m  = 200.0             # maximum weight
