@@ -38,8 +38,9 @@ def fitness(v, data, w_m):
   """
   calculate the fitness of a population matrix <v>.
   """
-  w = data[0]                     # weight
-  p = data[1]                     # price
+  w = data[:,0]                   # weight
+  p = data[:,1]                   # price
+  print w
                                   
   w_tot = dot(v, w)               # total weight
   p_tot = dot(v, p)               # total price
@@ -47,6 +48,7 @@ def fitness(v, data, w_m):
   p_tot[w_tot > w_m] = 0          # penalize overweight terms
 
   return p_tot
+
 
 def crossover(v):
   """
@@ -65,6 +67,7 @@ def crossover(v):
   
   return array(child)
 
+
 def selection(v, data, w_m):
   """
   select the surviors of the population matrix <v>.
@@ -73,40 +76,69 @@ def selection(v, data, w_m):
   P = f / sum(f)                  # probability of selection
   c = cumsum(P)                   # cumulative probability
 
+  print f
   idx = rand()                    # random index between 0 and 1
   sur = where(c > idx)[0][0]      # get the index of survivor
-  return v[sur]
+  return sur
 
-  
 
-def genetic_algorithm(data, w_m, alpha, gamma):
+def genetic_algorithm(data, w_m, p_s, gens, alpha, beta, gamma):
   """
   """
   m,n  = shape(data)                 # number of rows, columns
-  p_s  = 100                         # population size
   pop  = randint(2, size=(p_s, m))   # generate initial population
 
-  child = crossover(pop)             # create children
-  pop   = vstack((pop, child))       # add the children to the population
+  # perform algorithm for given number of generations:
+  fit_avg = []
+  fit_bst = []
+  for i in range(gens):
+    child    = crossover(pop)          # create children
+    pop      = vstack((pop, child))    # add the children to the population
+    L        = float(len(pop))         # size of population
+    mut      = rand(L, m) < beta/L     # where to mutate
+    pop[mut] = abs(pop[mut] - 1)       # mutate
 
-  f     = fitness(pop, data, w_m)    # calculate the fitness
-  best  = f.argsort()[-gamma:][::-1] # get indexes of gamma best
-  pop_n = pop[best]                  # keep the gamma best individuals
+    f     = fitness(pop, data, w_m)    # calculate the fitness
+    best  = f.argsort()[-gamma:][::-1] # get indexes of gamma best
+    pop_n = pop[best]                  # keep the gamma best individuals
+    pop   = delete(pop, best, axis=0)  # remove the gamma best from pop.
+    
+    # find survivors :
+    while len(pop_n) < p_s:
+      idx    = arange(len(pop))                   # index array to choose from
+      tourn  = choice(idx, alpha)                 # create the tournament
+      sur    = selection(pop[tourn], data, w_m)   # find a survivor from tourn
+      pop_n  = vstack((pop_n, pop[sur]))          # add survivor to new pop.
+      pop    = vstack((pop[:sur], pop[sur+1:]))   # remove the sur from old pop.
+    
+    pop = pop_n                                   # kill off non-survivors
+  
+    fit_avg.append(average(f))
+    fit_bst.append(best[0])
 
-  # find survivors :
-  while len(pop_n) < p_s:
-    idx      = arange(len(pop))
-    tourn    = choice(idx, alpha)
-    survivor = selection(tourn, data, w_m)
-    pop_n    = vstack((pop_n, survivor))
+  return pop, fit_avg, fit_bst
 
 
  
 #===============================================================================
 # find solution :
-w_m  = 200.0             # maximum weight
+w_m   = 200.0             # maximum weight
+p_s   = 100               # population size
+gens  = 1000              # number of generations
+alpha = 20                # tournament size
+beta  = 1.0               # mutation coefficient
+gamma = 5                 # number of best individuals to keep
 
 
+out = genetic_algorithm(data, w_m, p_s, gens, alpha, beta, gamma)
+
+pop     = out[0]
+fit_avg = out[1]
+fit_bst = out[2]
+
+plot(fit_avg)
+plot(fit_bst)
+show()
 
 
 
