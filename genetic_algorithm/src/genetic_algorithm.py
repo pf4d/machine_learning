@@ -34,29 +34,37 @@ data = loadtxt(f, dtype='float', delimiter=",", skiprows=1)
 #===============================================================================
 # functions used :
 
-def fitness(v, data, w_m):
+def penalty(x, w_m):
   """
-  calculate the fitness of a population matrix <v>.
+  penalty function for calculating fitness.
+  """
+  return 1/(x - w_m)
+
+def fitness(V, data, w_m):
+  """
+  calculate the fitness of a population matrix <V>.
   """
   w = data[:,0]                   # weight
   p = data[:,1]                   # price
-  print w
                                   
-  w_tot = dot(v, w)               # total weight
-  p_tot = dot(v, p)               # total price
-                                  
-  p_tot[w_tot > w_m] = 0          # penalize overweight terms
+  w_tot = dot(V, w)               # total weight
+  p_tot = dot(V, p)               # total price
+  w_mp  = w_tot > w_m             # where overweight
+ 
+  p        = ones(len(p_tot))            # penalty array
+  p[w_mp]  = penalty(w_tot[w_mp], w_m)   # penalty term
+  p_tot   *= p                           # penalize overweight terms
 
   return p_tot
 
 
-def crossover(v):
+def crossover(V):
   """
-  create children from population matrix <v>.
+  create children from population matrix <V>.
   """
-  m,n = shape(v)
-  shuffle(v)                      # shuffle the parents
-  pairs = split(v, m/2)           # form parent pairs
+  m,n = shape(V)
+  shuffle(V)                      # shuffle the parents
+  pairs = split(V, m/2)           # form parent pairs
 
   child = []
   for p in pairs:
@@ -68,15 +76,13 @@ def crossover(v):
   return array(child)
 
 
-def selection(v, data, w_m):
+def selection(V, data, w_m):
   """
-  select the surviors of the population matrix <v>.
+  select the surviors of the population matrix <V>.
   """
-  f = fitness(v, data, w_m)       # get the fitness of the population
-  P = f / sum(f)                  # probability of selection
-  c = cumsum(P)                   # cumulative probability
-
-  print f
+  f   = fitness(V, data, w_m)     # get the fitness of the population
+  P   = f / sum(f)                # probability of selection
+  c   = cumsum(P)                 # cumulative probability
   idx = rand()                    # random index between 0 and 1
   sur = where(c > idx)[0][0]      # get the index of survivor
   return sur
@@ -115,6 +121,7 @@ def genetic_algorithm(data, w_m, p_s, gens, alpha, beta, gamma):
   
     fit_avg.append(average(f))
     fit_bst.append(best[0])
+    print 'generation %i complete' % (i+1)
 
   return pop, fit_avg, fit_bst
 
@@ -136,8 +143,8 @@ pop     = out[0]
 fit_avg = out[1]
 fit_bst = out[2]
 
-plot(fit_avg)
-plot(fit_bst)
+plot(fit_avg, label='average')
+#plot(fit_bst, label='best')
 show()
 
 
