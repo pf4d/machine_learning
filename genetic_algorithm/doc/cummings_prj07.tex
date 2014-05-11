@@ -1,71 +1,43 @@
 \input{functions.tex}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
-\usepackage[top=.5in, bottom=1in, left=.75in, right=.75in]{geometry}
+\usepackage[top=.1in, bottom=1in, left=.5in, right=.5in]{geometry}
 \usepackage{framed}
 \definecolor{shadecolor}{gray}{0.9}
 \setlength{\columnsep}{8mm}
 
 \begin{document}
-\small
-\twocolumn
 
-\title{Project 06 - Neural Network}
+\footnotesize
+\title{Project 07 - Genetic Algorithm}
 \author{Evan Cummings\\
 CSCI 544 - Machine Learning}
 
 \maketitle
 
+\section{Program design}
+
+This program has been designed to operate on a population matrix $V$, weight array $w$, and price array $p$ such that $V \cdot w$ gives the total weight of the population and $V \cdot p$ gives the corresponding total price for each member.  Mutation was acheived by utilizing NumPy's \texttt{rand} function which can efficently create a $m \times n$ matrix of uniformly-distributed values between 0 and 1.  Because NumPy utilizes a Fortran backend, the calculation of mutation rates adds very little processing time.
+
+The greedy solution -- attained by calling the \texttt{greedy} method -- picks out the most valuable objects per unit weight and returns a total weight of 175 with value 1029.
+
 \section{Program usage}
 
 In the \texttt{src} folder, simply type
 
-\centerline{\texttt{python neural\_network.py}}
+\vspace{2mm}
+\centerline{\texttt{python genetic\_algorithm.py}}
 
-\noindent which results in the output
+\vspace{2mm}
+\noindent which results in the image ``\texttt{out.png}'' in the \texttt{doc/images} folder (see Figure 1).
 
-\begin{shaded}
-\scriptsize
-\begin{alltt}
-...
-
-Iteration 1484 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1485 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1486 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
-Iteration 1487 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
-Iteration 1488 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1489 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1490 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
-Iteration 1491 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1492 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1493 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1494 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1495 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1496 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1497 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1498 (max 1500) done: r (abs) = 3.0% (tol 2.0%) 
-Iteration 1499 (max 1500) done: r (abs) = 3.7% (tol 2.0%) 
-
-percent correct: 96.7%
-
-\end{alltt}
-\small
-\end{shaded}
-
-\section{Data}
+\section{Results}
 
 \begin{figure}[H]
   \centering
-		\includegraphics[width=0.5\textwidth]{images/data.png}
-  \caption{The data for the project, normalized and separated by dimension.}
+		\includegraphics[width=0.85\textwidth]{images/out.png}
+  \caption{\scriptsize The output results for given $\alpha$ (tournament size) and $\beta$ (mutation rate coefficient, rate $= \beta / L$, where $L$ is the size of the chromosome) values.  Shown in red above the plot from left to right is the generation of maximum fitness, maximum weight for this individual followed by corresponding price.}
 \end{figure}
-
-\begin{figure}[H]
-  \centering
-		\includegraphics[width=0.5\textwidth]{images/10-fold_results.png}
-  \caption{The percentage incorrect for each of the 10 folds.}
-\end{figure}
- 
 
 \end{document}
 
