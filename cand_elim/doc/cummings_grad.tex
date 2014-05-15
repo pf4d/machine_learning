@@ -1,0 +1,215 @@
+\input{functions.tex}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\usepackage[top=.5in, bottom=.5in, left=.5in, right=.5in]{geometry}
+\usepackage{framed}
+\definecolor{shadecolor}{gray}{0.9}
+\setlength{\columnsep}{8mm}
+\usepackage{natbib}
+
+\begin{document}
+\small
+
+\title{An alternative to the candidate elimination algorithm \\ 
+\vspace{5mm} \large CSCI 544 - Machine Learning}
+\author{Evan Cummings \and Douglas Raiford}
+
+\maketitle
+
+\section{Abstract}
+
+The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters a specific and general boundary such that they become minimally more general and specific, respectively.  The approach described here imposes the additional requirement that the positive values differ from the negative values in at least one dimension; this has the effect of reducing the complexity of the algorithm to the columns of the data instead of the rows.  We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
+
+\section{Description}
+
+let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.
+
+Before these boundaries are described, note that in order to create a set of boundaries that are both more specific than the most general or more general than the most specific boundary possible, we require at least one positive entry; if all we have are negative instances, we have no idea what the specific dimension values might be.  The algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
+
+In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
+
+Using this description, the intermediate values of the version space $\mathcal{V}$ may be derived from $\mathcal{S}$ by taking all combinations of $\mathcal{S}$ choosing from two elements up to $n-1$ where $n$ is the number of true positions in $\mathcal{S}$.  The remaining elements of $\mathcal{V}$ correspond to the most general boundary of $\mathcal{D}$ and are all possible one-non-wild combinations of the set $\mathcal{G}$.
+
+\section*{Determining $\mathcal{S}$ and $\mathcal{G}$}
+
+In order to determine the values of $\mathcal{S}$ and $\mathcal{G}$, note that index $j$ of both sets will be true if none of $\mathcal{P}_j$ intersect with $\mathcal{N}_j$; we have definitive values for the specific boundary and thus general boundary as well.  
+
+Alternatively, if the number of values in $\mathcal{N}_j$ is greater than the number of values in $\mathcal{P}_j$, we know that $\mathcal{S}_j$ is true and $\mathcal{G}_j$ is false; we have more possible values in dimension $j$ than what we have in $\mathcal{S}_j$, and hence have a specific but not general value for dimension $j$.  
+
+Likewise, if instead the number of values in $\mathcal{N}_j$ is less than the number of values in $\mathcal{P}_j$, we know that both $\mathcal{S}_j$ and $\mathcal{G}_j$ is false; the positive values may be anything and thus so may the specific and general boundaries.  
+
+Finally, if $\mathcal{P}_j$ is equivalent to $\mathcal{N}_j$, we know that $\mathcal{G}_j$ is false; the general boundary does not have a specific value for dimension $j$.  However, a subtle distinction for the value of $\mathcal{S}_j$ in this case exists.  If there is only one possible value for both $\mathcal{P}_j$ and $\mathcal{N}_j$, $\mathcal{S}_j$ is true, otherwise, it is false -- we have a specific value for the specific boundary in the case that all possible values of dimension $j$ are the same.
+
+These four cases cover all possibilities for the different values of $\mathcal{P}$ and $\mathcal{N}$ and thus describe completely the specific and general boundaries, $\mathcal{S}$ and $\mathcal{G}$, of the version space corresponding to $\mathcal{D}$.
+
+\section{Pseudo-code}
+
+Pseudo-code describing the algorithm is presented below.
+ 
+\begin{Algorithm}[H]{12cm}
+  \caption{ - Modified Candidate Elimination}
+  \begin{algorithmic} 
+    \State \textbf{INPUTS}: 
+    \State \ \ \ $\mathcal{D}$ - $m \times n$ Data matrix,
+    \State \ \ \ $\mathcal{C}$ - Class array.
+    \State \textbf{OUTPUT}: 
+    \State \ \ \ $\mathcal{S}$ - Specific boundary descriptor,
+    \State \ \ \ $\mathcal{G}$ - General boundary descriptor, 
+    \State \ \ \ $\mathcal{V}$ - Version space.
+    \\
+    \hrulefill
+    \Function{mCe}{$\mathcal{D},\mathcal{C}$}
+      \State $\mathcal{S} := \emptyset$
+      \State $\mathcal{G} := \emptyset$
+      \State $\mathcal{V} := \emptyset$
+      \For{$j \in [0,n]$}
+        \State $\mathcal{P}_j :=$ unique positive values of $\mathcal{D}_{\cdot,j}$
+        \State $\mathcal{N}_j :=$ unique positive values of $\mathcal{D}_{\cdot,j}$
+        \If{$\#(\mathcal{P}_j \cap \mathcal{N}_{j}) = 0$}
+          \State $\mathcal{S}_j := 1,\ \mathcal{G}_j := 1$
+        \ElsIf{$\#(\mathcal{N}_j) > \#(\mathcal{P}_j)$}
+          \State $\mathcal{S}_j := 1,\ \mathcal{G}_j := 0$
+        \ElsIf{$\#(\mathcal{N}_j) < \#(\mathcal{P}_j)$}
+          \State $\mathcal{S}_j := 0,\ \mathcal{G}_j := 0$
+        \ElsIf{$\mathcal{P}_j \equiv \mathcal{N}_j$}
+          \If{$\#(\mathcal{N}_j) = 1$ \textbf{and} $\#(\mathcal{P}_j) = 1$}
+            \State $\mathcal{S}_j := 1$
+          \Else
+            \State $\mathcal{S}_j := 0$
+          \EndIf
+          \State $\mathcal{N}_j := 0$
+        \EndIf
+      \EndFor
+      \State $\mathcal{T}_s := \{i : \mathcal{S}_i = 1\}$
+      \State $\mathcal{T}_g := \{i : \mathcal{G}_i = 1\}$
+      \State $\mathcal{S}_s := \{\binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i\}$
+      \State $\mathcal{S}_g := \binom{\mathcal{T}_g}{1}$
+      \State $\mathcal{V} := S_s \cup S_g$
+    \EndFunction
+  \end{algorithmic}
+\end{Algorithm}
+
+\section{Python implementation}
+
+This Python implementation demonstrates 10-fold cross-validated 99.8 - 100 \% accuracy for the data-set presented in \cite{mitchell}.
+
+\pythonexternal{../src/cand_elim.py}
+
+\section{Program usage}
+
+In the \texttt{src} folder, simply type
+
+\centerline{\texttt{python cand\_elim.py}}
+
+\vspace{2mm}
+\noindent which prints the version space for the entire dataset and the small dataset presented in \cite{mitchell}.
+
+\begin{multicols}{2}
+\begin{shaded}
+\scriptsize
+\begin{alltt}
+ENTIRE DATASET
+=========================================================
+
+ 4 wild :
+--------------------------------------------------
+['Cloudy' 'Warm' '' '' '' '']
+['Cloudy' '' 'Normal' '' '' '']
+['Cloudy' '' '' 'Weak' '' '']
+['' 'Warm' 'Normal' '' '' '']
+['' 'Warm' '' 'Weak' '' '']
+['' '' 'Normal' 'Weak' '' '']
+
+ 3 wild :
+--------------------------------------------------
+['Cloudy' 'Warm' 'Normal' '' '' '']
+['Cloudy' 'Warm' '' 'Weak' '' '']
+['Cloudy' '' 'Normal' 'Weak' '' '']
+['' 'Warm' 'Normal' 'Weak' '' '']
+
+ 2 wild :
+--------------------------------------------------
+['Cloudy' 'Warm' 'Normal' 'Weak' '' '']
+
+ 5 wild :
+--------------------------------------------------
+['Cloudy' '' '' '' '' '']
+['' 'Warm' '' '' '' '']
+
+
+ final version space with any multivalues added :
+--------------------------------------------------
+[['Cloudy' 'Warm' '' '' '' '']
+ ['Cloudy' '' 'Normal' '' '' '']
+ ['Cloudy' '' '' 'Weak' '' '']
+ ['' 'Warm' 'Normal' '' '' '']
+ ['' 'Warm' '' 'Weak' '' '']
+ ['' '' 'Normal' 'Weak' '' '']
+ ['Cloudy' 'Warm' 'Normal' '' '' '']
+ ['Cloudy' 'Warm' '' 'Weak' '' '']
+ ['Cloudy' '' 'Normal' 'Weak' '' '']
+ ['' 'Warm' 'Normal' 'Weak' '' '']
+ ['Cloudy' 'Warm' 'Normal' 'Weak' '' '']
+ ['Cloudy' '' '' '' '' '']
+ ['' 'Warm' '' '' '' '']
+ ['Sunny' 'Warm' '' '' '' '']
+ ['Sunny' '' 'Normal' '' '' '']
+ ['Sunny' '' '' 'Weak' '' '']
+ ['Sunny' 'Warm' 'Normal' '' '' '']
+ ['Sunny' 'Warm' '' 'Weak' '' '']
+ ['Sunny' '' 'Normal' 'Weak' '' '']
+ ['Sunny' 'Warm' 'Normal' 'Weak' '' '']
+ ['Sunny' '' '' '' '' '']]
+\end{alltt}
+\small
+\end{shaded}
+
+\begin{shaded}
+\scriptsize
+\begin{alltt}
+TEST DATASET FROM THE BOOK
+=========================================================
+
+ 4 wild :
+--------------------------------------------------
+['Sunny' 'Warm' '' '' '' '']
+['Sunny' '' '' 'Strong' '' '']
+['' 'Warm' '' 'Strong' '' '']
+
+ 3 wild :
+--------------------------------------------------
+['Sunny' 'Warm' '' 'Strong' '' '']
+
+ 5 wild :
+--------------------------------------------------
+['Sunny' '' '' '' '' '']
+['' 'Warm' '' '' '' '']
+
+
+ final version space with any multivalues added :
+--------------------------------------------------
+[['Sunny' 'Warm' '' '' '' '']
+ ['Sunny' '' '' 'Strong' '' '']
+ ['' 'Warm' '' 'Strong' '' '']
+ ['Sunny' 'Warm' '' 'Strong' '' '']
+ ['Sunny' '' '' '' '' '']
+ ['' 'Warm' '' '' '' '']]
+\end{alltt}
+\small
+\end{shaded}
+\end{multicols}
+
+\section{Discussion}
+
+This modification can reduce the complexity of the candidate elimination algorithm and provide an easier way of determining the version space for a dataset when the positive values differ from the negative values in at least one dimension.  During cross-validation, it is possible to attain equivalent positive and negative sets $\mathcal{P}$ and $\mathcal{N}$ such that $\mathcal{P} \equiv \mathcal{N}$.  It is therefore important to shuffle the data in such a way that this does not happen.
+
+While this algorithm reduces the complexity of the candidate-elimination algorithm and is more efficient when the unique values of the data-set are known, the applicability of the algorithm to real-world problems remains unclear.  Testing of the algorithm with multiple different datasets is required to fully validate this method.
+
+\bibliographystyle{alpha}
+\bibliography{biblio}
+
+\end{document}
+
+
+
+
