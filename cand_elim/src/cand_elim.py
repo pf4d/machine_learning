@@ -283,11 +283,11 @@ datat = vstack((data1, data2, data3, data4))
 # truncate the data to only the unique instances (not required) :
 #data = find_unique_row(data)
 
-print "ENTIRE DATASET"
+print "VERSION SPACE FOR THE ENTIRE DATASET"
 print "========================================================="
 spc,  gen,  vs  = candidate_elimination(data, classes)
 
-print "TEST DATASET FROM THE BOOK"
+print "VERSION SPACE FOR THE TEST DATASET FROM THE BOOK"
 print "========================================================="
 spct, gent, vst = candidate_elimination(datat, classes)
 

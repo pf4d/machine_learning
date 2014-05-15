@@ -24,7 +24,7 @@ The candidate elimination algorithm classifies a set of data with two possible c
 
 let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.
 
-Before these boundaries are described, note that in order to create a set of boundaries that are both more specific than the most general or more general than the most specific boundary possible, we require at least one positive entry; if all we have are negative instances, we have no idea what the specific dimension values might be.  The algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
+Before these boundaries are described, note that in order to create a set of boundaries that are either more specific than the most general or more general than the most specific boundary possible, we require at least one positive and one negative entry; if all we have are negative instances, we have no idea what the specific dimension values might be, likewise for all negative values.  The algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
 
 In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
 
@@ -41,6 +41,30 @@ Likewise, if instead the number of values in $\mathcal{N}_j$ is less than the nu
 Finally, if $\mathcal{P}_j$ is equivalent to $\mathcal{N}_j$, we know that $\mathcal{G}_j$ is false; the general boundary does not have a specific value for dimension $j$.  However, a subtle distinction for the value of $\mathcal{S}_j$ in this case exists.  If there is only one possible value for both $\mathcal{P}_j$ and $\mathcal{N}_j$, $\mathcal{S}_j$ is true, otherwise, it is false -- we have a specific value for the specific boundary in the case that all possible values of dimension $j$ are the same.
 
 These four cases cover all possibilities for the different values of $\mathcal{P}$ and $\mathcal{N}$ and thus describe completely the specific and general boundaries, $\mathcal{S}$ and $\mathcal{G}$, of the version space corresponding to $\mathcal{D}$.
+
+\section{Construction of version space $\mathcal{V}$}
+
+Once we have $\mathcal{S}$ and $\mathcal{G}$, as described in the previous section, we can create the version space for the dataset.  This is acheived by taking the union of all combinations of $\mathcal{S}$ and $\mathcal{G}$.  Recall that position $i$ of $\mathcal{S}$ is true if and only if this value is \emph{not} wild, i.e., we have a specific value for this location.
+
+\begin{align*}
+  \mathcal{T}_s &= \{i : \mathcal{S}_i = 1\} \\
+  \mathcal{T}_g &= \{i : \mathcal{G}_i = 1\} \\
+  \mathcal{V}_s &= \left\{ \binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i  \right\} \\
+  \mathcal{V}_g &= \left\{ \binom{\mathcal{T}_g}{1} \right\} \\
+  \mathcal{V}   &= V_s \cup V_g 
+\end{align*}
+
+Note that these are indicies corresponding to the unique set of positive values of the columns of $\mathcal{D}$, defined above as $\mathcal{P}$.
+
+In order for dimension $i$ to have multiple positive values, the number of unique positive values in $\mathcal{P}_i$ must be greater than the number of unique negative values in $\mathcal{N}_i$ while $\mathcal{G}_i$ must also be true.  To see why, recall that $\mathcal{P} \not\equiv \mathcal{N}$ and hence if $\#(\mathcal{P}_i) > \#(\mathcal{N}_i)$ we know that there is at least one value in $\mathcal{P}_i$ not in $\mathcal{N}_i$, and $\mathcal{G}_i$ must be true, otherwise dimension $i$ may be anything, i.e., ``wild.''  To complete the version space, the values of $V$ with index $i$ indicated as a multiple value need to be permuted with the different positive values.
+
+\section{Discussion}
+
+This modification can reduce the complexity of the candidate elimination algorithm and provide an easier way of determining the version space for a dataset when the positive values differ from the negative values in at least one dimension.  During cross-validation, it is possible to attain equivalent positive and negative sets $\mathcal{P}$ and $\mathcal{N}$ such that $\mathcal{P} \equiv \mathcal{N}$.  It is therefore important to shuffle the data in such a way that this does not happen.
+
+Furthermore, while this algorithm is more efficient when the unique values of the data-set are known, the applicability of the algorithm to real-world problems remains unclear.  Testing of the algorithm with multiple different datasets is required to fully validate this method.
+
+\newpage
 
 \section{Pseudo-code}
 
@@ -82,12 +106,14 @@ Pseudo-code describing the algorithm is presented below.
       \EndFor
       \State $\mathcal{T}_s := \{i : \mathcal{S}_i = 1\}$
       \State $\mathcal{T}_g := \{i : \mathcal{G}_i = 1\}$
-      \State $\mathcal{S}_s := \{\binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i\}$
-      \State $\mathcal{S}_g := \binom{\mathcal{T}_g}{1}$
-      \State $\mathcal{V} := S_s \cup S_g$
+      \State $\mathcal{V}_s := \left\{\binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i \right\}$
+      \State $\mathcal{V}_g := \left\{ \binom{\mathcal{T}_g}{1} \right\}$
+      \State $\mathcal{V}   := V_s \cup V_g$
     \EndFunction
   \end{algorithmic}
 \end{Algorithm}
+
+\newpage
 
 \section{Python implementation}
 
@@ -108,7 +134,7 @@ In the \texttt{src} folder, simply type
 \begin{shaded}
 \scriptsize
 \begin{alltt}
-ENTIRE DATASET
+VERSION SPACE FOR THE ENTIRE DATASET
 =========================================================
 
  4 wild :
@@ -167,7 +193,7 @@ ENTIRE DATASET
 \begin{shaded}
 \scriptsize
 \begin{alltt}
-TEST DATASET FROM THE BOOK
+VERSION SPACE FOR THE TEST DATASET FROM THE BOOK
 =========================================================
 
  4 wild :
@@ -199,11 +225,7 @@ TEST DATASET FROM THE BOOK
 \end{shaded}
 \end{multicols}
 
-\section{Discussion}
-
-This modification can reduce the complexity of the candidate elimination algorithm and provide an easier way of determining the version space for a dataset when the positive values differ from the negative values in at least one dimension.  During cross-validation, it is possible to attain equivalent positive and negative sets $\mathcal{P}$ and $\mathcal{N}$ such that $\mathcal{P} \equiv \mathcal{N}$.  It is therefore important to shuffle the data in such a way that this does not happen.
-
-While this algorithm reduces the complexity of the candidate-elimination algorithm and is more efficient when the unique values of the data-set are known, the applicability of the algorithm to real-world problems remains unclear.  Testing of the algorithm with multiple different datasets is required to fully validate this method.
+\newpage
 
 \bibliographystyle{alpha}
 \bibliography{biblio}
