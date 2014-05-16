@@ -18,17 +18,17 @@
 
 \section{Abstract}
 
-The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters a specific and general boundary such that they become minimally more general and specific, respectively.  The approach described here imposes the additional requirement that the positive values differ from the negative values in at least one dimension; this has the effect of reducing the complexity of the algorithm to the columns of the data instead of the rows.  We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
+The candidate elimination algorithm classifies a set of data with two possible classifications by creating two boundaries for a data-set, one being the most specific and the other the most general.  These boundaries uniquely describe the version space of the data and allow classification to be performed.  In order to create these boundaries, the algorithm iterates through the data and alters a specific and general boundary such that they become minimally more general and specific, respectively.  The approach described here imposes the additional requirement that the positive values differ from the negative values in at least one dimension; this has the effect of reducing the complexity of the new algorithm, Fast Finder of Version Space (FFVS), to the columns of the data instead of the rows.  We explain how the boundaries and thus version space may be derived using only the unique values for each dimension of the data-set.
 
 \section{Description}
 
 let $\mathcal{P}_j$ and $\mathcal{N}_j$ be the sets of all possible and values for the dimension $j$ of the data-set $\mathcal{D}$ corresponding to positive and negative values, respectively.  With this, I claim that we can describe the specific boundary $\mathcal{S}$ and general boundary $\mathcal{G}$.
 
-Before these boundaries are described, note that in order to create a set of boundaries that are either more specific than the most general or more general than the most specific boundary possible, we require at least one positive and one negative entry; if all we have are negative instances, we have no idea what the specific dimension values might be, likewise for all negative values.  The algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
+Before these boundaries are described, note that in order to create a set of boundaries that are either more specific than the most general or more general than the most specific boundary possible, we require at least one positive and one negative entry; if all we have are negative instances, we have no idea what the specific dimension values might be, likewise for all positive values.  The FFVS algorithm described here makes the further requirement that $\mathcal{P} \not\equiv \mathcal{N}$.
 
 In order to describe the boundaries, let the values of $\mathcal{S}$ be either true or false, where the value is false if and only if position $i$ of $\mathcal{S}$ may be any possible value of dimension $i$, i.e., it is ``wild''.  Likewise, let the values of $\mathcal{G}$ be either true or false, where the value is true if and only if the most general boundary elements may have a specific value in position $i$.
 
-Using this description, the intermediate values of the version space $\mathcal{V}$ may be derived from $\mathcal{S}$ by taking all combinations of $\mathcal{S}$ choosing from two elements up to $n-1$ where $n$ is the number of true positions in $\mathcal{S}$.  The remaining elements of $\mathcal{V}$ correspond to the most general boundary of $\mathcal{D}$ and are all possible one-non-wild combinations of the set $\mathcal{G}$.
+Using this description, the intermediate values of the version space $\mathcal{V}$ may be derived from $\mathcal{S}$ by taking all combinations of $\mathcal{S}$ choosing from two elements up to $n-1$ where $n$ is the number of true positions in $\mathcal{S}$.  The remaining elements of $\mathcal{V}$ correspond to the most general boundary of $\mathcal{D}$ and are all possible one-non-wild combinations of the set $\mathcal{G}$.  Multiple positive-valued dimensions may then be permuted within $\mathcal{V}$.
 
 \section*{Determining $\mathcal{S}$ and $\mathcal{G}$}
 
@@ -44,23 +44,31 @@ These four cases cover all possibilities for the different values of $\mathcal{P
 
 \section{Construction of version space $\mathcal{V}$}
 
-Once we have $\mathcal{S}$ and $\mathcal{G}$, as described in the previous section, we can create the version space for the dataset.  This is acheived by taking the union of all combinations of $\mathcal{S}$ and $\mathcal{G}$.  Recall that position $i$ of $\mathcal{S}$ is true if and only if this value is \emph{not} wild, i.e., we have a specific value for this location.
+Once we have $\mathcal{S}$ and $\mathcal{G}$, as described in the previous section, we can create the version space for the dataset.  This is achieved by taking the union of all combinations of $\mathcal{S}$ and $\mathcal{G}$.  Recall that position $i$ of $\mathcal{S}$ is true if and only if this value is \emph{not} wild, i.e., we have a specific value for this location.  Using this definition, we can construct all possible sets of expressions from $\mathcal{S}$ up to but not including $\mathcal{G}$ by taking the combination of indices of $\mathcal{S}$ from 2 to $l$ where $l$ is number of non-wild entries in $\mathcal{S}$:
 
 \begin{align*}
   \mathcal{T}_s &= \{i : \mathcal{S}_i = 1\} \\
-  \mathcal{T}_g &= \{i : \mathcal{G}_i = 1\} \\
-  \mathcal{V}_s &= \left\{ \binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i  \right\} \\
-  \mathcal{V}_g &= \left\{ \binom{\mathcal{T}_g}{1} \right\} \\
-  \mathcal{V}   &= V_s \cup V_g 
+  \mathcal{V}_s &= \left\{ \binom{\mathcal{T}_s}{k} : k \in [2,l],\ l = \sum_i \mathcal{S}_i  \right\}.
 \end{align*}
 
-Note that these are indicies corresponding to the unique set of positive values of the columns of $\mathcal{D}$, defined above as $\mathcal{P}$.
+We then need to add on the possible one-combinations of the non-wild entries in $\mathcal{G}$,
 
-In order for dimension $i$ to have multiple positive values, the number of unique positive values in $\mathcal{P}_i$ must be greater than the number of unique negative values in $\mathcal{N}_i$ while $\mathcal{G}_i$ must also be true.  To see why, recall that $\mathcal{P} \not\equiv \mathcal{N}$ and hence if $\#(\mathcal{P}_i) > \#(\mathcal{N}_i)$ we know that there is at least one value in $\mathcal{P}_i$ not in $\mathcal{N}_i$, and $\mathcal{G}_i$ must be true, otherwise dimension $i$ may be anything, i.e., ``wild.''  To complete the version space, the values of $V$ with index $i$ indicated as a multiple value need to be permuted with the different positive values.
+\begin{align*}
+  \mathcal{T}_g &= \{i : \mathcal{G}_i = 1\} \\
+  \mathcal{V}_g &= \left\{ \binom{\mathcal{T}_g}{1} \right\}.
+\end{align*}
+
+And finally, we can take the union of these sets to arrive at $\mathcal{V}$,
+
+$$\mathcal{V} = V_s \cup V_g.$$
+
+Recall that the values of $\mathcal{V}$ are indices corresponding to the unique set of positive values of the columns of $\mathcal{D}$, defined above as $\mathcal{P}$.
+
+Finally, in order to account for the possibility of dimension $i$ having multiple positive values, the number of unique positive values in $\mathcal{P}_i$ must be greater than the number of unique negative values in $\mathcal{N}_i$ while $\mathcal{G}_i$ must also be true.  To see why, recall that $\mathcal{P} \not\equiv \mathcal{N}$ and hence if $\#(\mathcal{P}_i) > \#(\mathcal{N}_i)$, $\mathcal{P}_i \not\equiv \mathcal{N}_i$ and we know that there is at least one value in $\mathcal{P}_i$ not in $\mathcal{N}_i$.  Furthermore, $\mathcal{G}_i$ must be true; otherwise dimension $i$ may be anything, i.e., it is ``wild.''  To complete the version space, the values of $\mathcal{V}$ with index $i$ indicated as a multiple value dimensions needs to be permuted with the different positive values in $\mathcal{P}_i$, the unique positive values of dimension $i$.
 
 \section{Discussion}
 
-This modification can reduce the complexity of the candidate elimination algorithm and provide an easier way of determining the version space for a dataset when the positive values differ from the negative values in at least one dimension.  During cross-validation, it is possible to attain equivalent positive and negative sets $\mathcal{P}$ and $\mathcal{N}$ such that $\mathcal{P} \equiv \mathcal{N}$.  It is therefore important to shuffle the data in such a way that this does not happen.
+This modification may reduce the complexity of the candidate elimination algorithm and provide an easier way of determining the version space for a dataset when the set of all possible positive values differ from the set of all possible negative values in at least one dimension.  It is important to note that during cross-validation, it is possible to attain equivalent positive and negative sets $\mathcal{P}$ and $\mathcal{N}$ such that $\mathcal{P} \equiv \mathcal{N}$, which violates the requirement of the FFVS algorithm.  It is therefore important to shuffle the data in such a way that this does not happen.
 
 Furthermore, while this algorithm is more efficient when the unique values of the data-set are known, the applicability of the algorithm to real-world problems remains unclear.  Testing of the algorithm with multiple different datasets is required to fully validate this method.
 
@@ -71,7 +79,7 @@ Furthermore, while this algorithm is more efficient when the unique values of th
 Pseudo-code describing the algorithm is presented below.
  
 \begin{Algorithm}[H]{12cm}
-  \caption{ - Modified Candidate Elimination}
+  \caption{ - Fast Finder of Version Space}
   \begin{algorithmic} 
     \State \textbf{INPUTS}: 
     \State \ \ \ $\mathcal{D}$ - $m \times n$ Data matrix,
@@ -101,7 +109,7 @@ Pseudo-code describing the algorithm is presented below.
           \Else
             \State $\mathcal{S}_j := 0$
           \EndIf
-          \State $\mathcal{N}_j := 0$
+          \State $\mathcal{G}_j := 0$
         \EndIf
       \EndFor
       \State $\mathcal{T}_s := \{i : \mathcal{S}_i = 1\}$
