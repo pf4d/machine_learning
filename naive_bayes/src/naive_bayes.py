@@ -70,7 +70,7 @@ def get_normal(x, mu, sigma):
   Function which returns the normal value at <x> with mean <mu> and 
   standard deviation <sigma>.
   """
-  return 1/(sigma * sqrt(2 * pi)) * exp(-(x - mu)**2 / (2* sigma**2))
+  return 1.0/(sigma * sqrt(2.0 * pi)) * exp(-(x - mu)**2 / (2.0 * sigma**2))
 
 def plot_dist(train, train_class, nbins, name, norm=True):
   """
@@ -125,6 +125,7 @@ def plot_dist(train, train_class, nbins, name, norm=True):
     ax.grid()                              # gridlines
   tight_layout() 
   savefig('../doc/images/' + name, dpi=300)
+  plt.close(fig)
   #show()
   return array(bi_a), array(ct_a), mus, sigs
 
@@ -132,10 +133,14 @@ def find_ct_index(bins, v):
   """
   Find the bin count index of value <v> in bin array <bins>.
   """
-  idx = argmin(abs(bins - v))
-  if bins[idx] < v: cti = idx
-  else:             cti = idx - 1
-  return cti
+  #idx = argmin(abs(bins - v))
+  #if bins[idx] < v: cti = idx
+  #else:             cti = idx - 1
+  #return cti
+  d   = diff(bins)                     # distance between bins
+  m   = bins[:-1] + d/2                # midpoint of bin
+  idx = argmin(abs(m - v))             # bin index containing v
+  return idx
 
 def classify_NB(test, test_class, train, train_class, out, param=False):
   """
@@ -189,7 +194,7 @@ def classify_NB(test, test_class, train, train_class, out, param=False):
     sum_i   = sum(P_mat,  axis=0)  # sum over each class probability
     P_mat  /= (sum_i + q)          # normalize the probabilities
     Pa_vj   = prod(P_mat, axis=1)  # find the product of probabilities
-    prior   = Pvj * Pa_vj          # the prior
+    prior   = Pvj * Pa_vj          # the prior - make Pvj = 1.0 for indep. prior
     v_NB    = argmax(prior) + 1    # find the maximum index of probability
     v_NB_a.append(v_NB)            # append the ML class to result list
     P_test.append(P_mat)           # append the probability matrix to list
@@ -222,7 +227,7 @@ def plot_results(test_class, v_NB, v_NB_p, name):
   grid()
   legend()
   savefig('../doc/images/' + name + '_results.png', dpi=300)
-  #show()
+  show()
 
 #===============================================================================
 # get the non-normalized data :
